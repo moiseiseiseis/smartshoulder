@@ -27,3 +27,7 @@ web/CLAUDE.md
 # Compilados
 api/dist/
 coverage/
+
+# Datos sintéticos y modelos de prueba (se regeneran)
+dataset_synth/
+ml/models/model_v0/

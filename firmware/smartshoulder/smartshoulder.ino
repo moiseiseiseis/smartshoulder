@@ -100,7 +100,7 @@ static void handleCommand(const uint8_t *d, int len, bool fromSerial) {
         repInSet = 0;
         repCounter.reset();
         if (sessionActive && expectedExercise) emitEvent(EVT_EXERCISE_CHANGED, expectedExercise, 0, 0);
-        Serial.print("# EXPECTED "); Serial.println(expectedExercise);
+        Serial.print("# EXPECTED "); Serial.print(expectedExercise); Serial.print(" @"); Serial.println(sampleIndex);
       }
       break;
     case CMD_SYNC_EVENTS:   if (len >= 3) syncFrom = d[1] | (d[2] << 8); break;
@@ -183,10 +183,17 @@ static void sampleTick() {
   ImuSample s;
   if (!imuRead(s)) return;
   if (mode == MODE_CAPTURE) emitCaptureSample(s, sampleIndex);
-  else if (expectedExercise && repCounter.update(s)) {
+  else if (sessionFromSerial) {
+    // Diagnóstico de paridad (contexto/02 §9): la muestra cruda va antes que su posible REP,
+    // para que Python cuente sobre exactamente la misma señal.
+    char line[64];
+    snprintf(line, sizeof(line), "D,%lu,%d,%d,%d,%d,%d,%d", (unsigned long)sampleIndex, s.v[0], s.v[1], s.v[2], s.v[3], s.v[4], s.v[5]);
+    Serial.println(line);
+  }
+  if (mode == MODE_INFERENCE && expectedExercise && repCounter.update(s)) {
     repInSet++;
     emitEvent(EVT_REP, expectedExercise, repInSet, 0);   // confianza 0 = sin clasificador (MODEL_VERSION 0)
-    Serial.print("# REP "); Serial.println(repInSet);
+    Serial.print("# REP "); Serial.print(repInSet); Serial.print(" @"); Serial.println(sampleIndex);
   }
   sampleIndex++;
 }

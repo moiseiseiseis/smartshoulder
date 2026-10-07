@@ -3,11 +3,12 @@
 #include "repcounter.h"
 
 // A 50 Hz. Valores provisionales, a calibrar con el dataset (contexto/03 §6, punto 5).
+// Copia exacta en ml/smartshoulder_ml/repcounter.py: si cambias algo aquí, cámbialo allá.
 static const float GYRO_SCALE = 0.0175f;   // crudo → dps (±500 dps)
 static const float LP_ALPHA = 0.25f;       // pasa-bajas de 1er orden (~2–3 Hz)
 static const float ENERGY_ALPHA = 0.02f;   // ventana lenta (~1 s) para el eje dominante
-static const float T_HIGH = 30.0f;         // dps: inicio de movimiento
-static const float T_LOW = 12.0f;          // dps: reposo (histéresis)
+static const float T_HIGH = 25.0f;         // dps: inicio de movimiento (30 no alcanzaba rotaciones lentas de ~60°)
+static const float T_LOW = 10.0f;          // dps: reposo (histéresis)
 static const uint32_t MIN_REP = 40;        // 0.8 s: una repetición de fisio rara vez dura menos
 static const uint32_t MAX_REP = 500;       // 10 s: si no regresa, se descarta
 static const uint32_t REFRACTORY = 15;     // 0.3 s entre repeticiones
