@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* SmartShoulder — tokens del sistema visual (contexto/07 §5.4).
+   Verificado y reportado siempre van con ícono + color + texto, nunca solo color. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --border: #e2e5ea;
+  --text: #17202a;
+  --muted: #5d6874;
+  --primary: #0d5c70;
+  --primary-hover: #0a4a5b;
+  --primary-soft: #e3eff2;
+
+  --verified: #0b7a62;
+  --verified-soft: #dff3ec;
+  --reported: #915400;
+  --reported-soft: #fcefd9;
+
+  --danger: #b42318;
+  --danger-soft: #fdeceb;
+  --ok: #1a7f37;
+
+  /* calendario de apego */
+  --day-complete: #1f9d72;
+  --day-incomplete: #f2c46d;
+  --day-aborted: #e2766c;
+  --day-none: #e6e9ee;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-verified: var(--verified);
+  --color-verified-soft: var(--verified-soft);
+  --color-reported: var(--reported);
+  --color-reported-soft: var(--reported-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-ok: var(--ok);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

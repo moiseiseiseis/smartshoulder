@@ -1,0 +1,15 @@
+# Base de datos local de desarrollo: docker compose up -d
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: smartshoulder-db
+    environment:
+      POSTGRES_USER: smartshoulder
+      POSTGRES_PASSWORD: smartshoulder
+      POSTGRES_DB: smartshoulder
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

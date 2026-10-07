@@ -1,0 +1,265 @@
+// SmartShoulder — esquema de datos (contexto/07 §4.5)
+// Módulo "management": Clinic, User, Patient, InviteCode, Device, DeviceAssignment, ProtocolTemplate
+// Módulo "adherence" (alcance regulado): Exercise, Prescription, Session, SessionExerciseResult, SessionEvent
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PHYSIO
+  CLINIC_ADMIN
+  PATIENT
+}
+
+enum Arm {
+  RIGHT
+  LEFT
+}
+
+enum DeviceStatus {
+  AVAILABLE
+  ASSIGNED
+  CLEANING
+  RETIRED
+}
+
+/// Origen del dato de apego. Nunca se suman en el mismo indicador.
+enum SessionSource {
+  VERIFIED // contado por el dispositivo
+  REPORTED // marcado a mano por el paciente
+}
+
+enum SessionStatus {
+  COMPLETE
+  INCOMPLETE
+  ABORTED
+}
+
+// ===================== Gestión =====================
+
+model Clinic {
+  id        String             @id @default(cuid())
+  name      String
+  logoUrl   String?
+  createdAt DateTime           @default(now())
+  users     User[]
+  patients  Patient[]
+  devices   Device[]
+  templates ProtocolTemplate[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  clinicId     String
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  role         Role
+  name         String
+  email        String?  @unique
+  passwordHash String?
+  createdAt    DateTime @default(now())
+
+  physioPatients Patient[]      @relation("PhysioPatients")
+  patient        Patient?       @relation("PatientUser")
+  prescriptions  Prescription[]
+}
+
+model Patient {
+  id          String    @id @default(cuid())
+  clinicId    String
+  clinic      Clinic    @relation(fields: [clinicId], references: [id])
+  physioId    String
+  physio      User      @relation("PhysioPatients", fields: [physioId], references: [id])
+  userId      String?   @unique
+  user        User?     @relation("PatientUser", fields: [userId], references: [id])
+  displayName String
+  affectedArm Arm
+  diagnosis   String
+  isDemo      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  archivedAt  DateTime?
+
+  prescriptions Prescription[]
+  sessions      Session[]
+  invites       InviteCode[]
+  assignments   DeviceAssignment[]
+}
+
+model InviteCode {
+  code      String    @id
+  patientId String
+  patient   Patient   @relation(fields: [patientId], references: [id])
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Device {
+  id           String             @id @default(cuid())
+  clinicId     String
+  clinic       Clinic             @relation(fields: [clinicId], references: [id])
+  bleName      String             @unique // "SS-54F5": lo que se imprime en la carcasa
+  status       DeviceStatus       @default(AVAILABLE)
+  fwVersion    Int?
+  modelVersion Int?
+  lastBattery  Int?
+  lastSeenAt   DateTime?
+  isDemo       Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  assignments  DeviceAssignment[]
+  sessions     Session[]
+}
+
+model DeviceAssignment {
+  id         String    @id @default(cuid())
+  deviceId   String
+  device     Device    @relation(fields: [deviceId], references: [id])
+  patientId  String
+  patient    Patient   @relation(fields: [patientId], references: [id])
+  assignedAt DateTime  @default(now())
+  returnedAt DateTime?
+
+  @@index([deviceId, returnedAt])
+  @@index([patientId, returnedAt])
+}
+
+model ProtocolTemplate {
+  id               String         @id @default(cuid())
+  clinicId         String?
+  clinic           Clinic?        @relation(fields: [clinicId], references: [id])
+  name             String
+  description      String
+  weeks            Int?
+  frequencyPerWeek Int
+  items            TemplateItem[]
+  prescriptions    Prescription[]
+}
+
+model TemplateItem {
+  id         String           @id @default(cuid())
+  templateId String
+  template   ProtocolTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  exerciseId Int
+  exercise   Exercise         @relation(fields: [exerciseId], references: [id])
+  sets       Int
+  reps       Int
+  restSec    Int
+  order      Int
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  actorId  String?
+  action   String
+  entity   String
+  entityId String
+  diff     Json?
+  at       DateTime @default(now())
+
+  @@index([entity, entityId])
+}
+
+// ===================== Apego (alcance regulado) =====================
+
+/// id = exercise_id del firmware y del modelo (contracts/ble.md)
+model Exercise {
+  id                Int                     @id
+  name              String
+  instructions      String
+  videoUrl          String?
+  defaultSets       Int
+  defaultReps       Int
+  defaultRestSec    Int
+  enabled           Boolean                 @default(true)
+  templateItems     TemplateItem[]
+  prescriptionItems PrescriptionItem[]
+  results           SessionExerciseResult[]
+}
+
+model Prescription {
+  id               String             @id @default(cuid())
+  patientId        String
+  patient          Patient            @relation(fields: [patientId], references: [id])
+  templateId       String?
+  template         ProtocolTemplate?  @relation(fields: [templateId], references: [id])
+  frequencyPerWeek Int
+  startDate        DateTime
+  endDate          DateTime?
+  notes            String?
+  active           Boolean            @default(true)
+  createdById      String
+  createdBy        User               @relation(fields: [createdById], references: [id])
+  createdAt        DateTime           @default(now())
+  items            PrescriptionItem[]
+  sessions         Session[]
+
+  @@index([patientId, active])
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  exerciseId     Int
+  exercise       Exercise     @relation(fields: [exerciseId], references: [id])
+  sets           Int
+  reps           Int
+  restSec        Int
+  order          Int
+}
+
+model Session {
+  id              String                  @id @default(cuid())
+  clientSessionId String                  @unique // idempotencia: la app puede reintentar la subida
+  patientId       String
+  patient         Patient                 @relation(fields: [patientId], references: [id])
+  prescriptionId  String
+  prescription    Prescription            @relation(fields: [prescriptionId], references: [id])
+  source          SessionSource
+  deviceId        String?
+  device          Device?                 @relation(fields: [deviceId], references: [id])
+  fwVersion       Int?
+  modelVersion    Int?
+  startedAt       DateTime
+  endedAt         DateTime
+  status          SessionStatus
+  painScore       Int? // EVA 0–10, reportado por el paciente
+  effortScore     Int? // 0–10, reportado por el paciente
+  isDemo          Boolean                 @default(false)
+  createdAt       DateTime                @default(now())
+  results         SessionExerciseResult[]
+  events          SessionEvent[]
+
+  @@index([patientId, startedAt])
+}
+
+model SessionExerciseResult {
+  id             String   @id @default(cuid())
+  sessionId      String
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId     Int
+  exercise       Exercise @relation(fields: [exerciseId], references: [id])
+  setsDone       Int
+  setsPrescribed Int
+  repsDone       Int
+  repsPrescribed Int
+}
+
+model SessionEvent {
+  id                String  @id @default(cuid())
+  sessionId         String
+  session           Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  seq               Int
+  type              Int // 1 = REP, 2 = EXERCISE_CHANGED, 3 = SESSION_END
+  exerciseId        Int
+  repIndex          Int
+  confidence        Int
+  deviceTimestampMs Int
+
+  @@unique([sessionId, seq])
+}

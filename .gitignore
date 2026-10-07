@@ -1,0 +1,29 @@
+# Dataset con datos personales: nunca al repositorio
+dataset/
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+
+# Node / Next.js
+node_modules/
+.next/
+.env*
+!.env.example
+
+# Flutter
+app/**/build/
+app/**/.dart_tool/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Notas de plantilla de herramientas (no son parte del proyecto)
+web/CLAUDE.md
+
+# Compilados
+api/dist/
+coverage/
