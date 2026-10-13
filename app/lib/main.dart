@@ -13,6 +13,6 @@ Future<void> main() async {
   final storage = Storage(await SharedPreferences.getInstance());
   runApp(ProviderScope(
     overrides: [storageProvider.overrideWithValue(storage)],
-    child: const SmartShoulderApp(),
+    child: const RumboApp(),
   ));
 }

@@ -1,4 +1,4 @@
-// SmartShoulder — esquema de datos (contexto/07 §4.5)
+// Rumbo Rehab — esquema de datos (contexto/07 §4.5)
 // Módulo "management": Clinic, User, Patient, InviteCode, Device, DeviceAssignment, ProtocolTemplate
 // Módulo "adherence" (alcance regulado): Exercise, Prescription, Session, SessionExerciseResult, SessionEvent
 
@@ -103,7 +103,7 @@ model Device {
   id           String             @id @default(cuid())
   clinicId     String
   clinic       Clinic             @relation(fields: [clinicId], references: [id])
-  bleName      String             @unique // "SS-54F5": lo que se imprime en la carcasa
+  bleName      String             @unique // "RR-54F5": lo que se imprime en la carcasa
   status       DeviceStatus       @default(AVAILABLE)
   fwVersion    Int?
   modelVersion Int?

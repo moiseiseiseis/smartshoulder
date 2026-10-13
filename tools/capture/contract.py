@@ -1,4 +1,4 @@
-"""Contrato BLE de SmartShoulder (espejo de contracts/ble.md)."""
+"""Contrato BLE de Rumbo Rehab (espejo de contracts/ble.md)."""
 import struct
 
 def _uuid(short: str) -> str:
@@ -11,7 +11,7 @@ UUID_RAW_STREAM = _uuid("0004")
 UUID_STATUS = _uuid("0005")
 UUID_BATTERY_LEVEL = "00002a19-0000-1000-8000-00805f9b34fb"
 
-NAME_PREFIX = "SS-"
+NAME_PREFIX = "RR-"
 
 CMD_START_SESSION = 0x01
 CMD_STOP_SESSION = 0x02

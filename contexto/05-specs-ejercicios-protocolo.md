@@ -1,5 +1,7 @@
 # SmartShoulder — 05. Ejercicios: catálogo, ejecución y protocolo de captura de datos
 
+> **Nota (oct 2026):** el proyecto ahora se llama **Rumbo Rehab** (ver `08-marca-rumbo-rehab.md`). Este documento conserva el nombre original SmartShoulder; las rutas de código cambiaron a `firmware/rumbo/`, `ml/rumbo_ml/` y el reloj se anuncia como `RR-XXXX`.
+
 **Versión:** 0.1. **Pendiente de validar con el fisioterapeuta antes de grabar el dataset definitivo.**
 **Relacionado:** `03-specs-modelo-tinyml.md`, `01-specs-app-paciente.md`
 

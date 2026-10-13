@@ -230,3 +230,30 @@ function maxDay(a: string, b: string) {
 function minDay(a: string, b: string) {
   return a < b ? a : b;
 }
+
+// ---------------------------------------------------------------- meta semanal (app del paciente)
+
+/**
+ * Progreso de la semana (lunes a domingo) contra la frecuencia prescrita, y semanas cumplidas.
+ * Reemplaza a la "racha de días seguidos", que castigaba los días de descanso que el propio fisio indica.
+ * Cuenta DÍAS con al menos una sesión completa (la frecuencia del fisio está en días por semana).
+ */
+export function weekProgress(sessions: SessionLite[], goal: number, startDay: string, today: string, tz: string) {
+  const completeDays = new Set(sessions.filter((s) => s.status === 'COMPLETE').map((s) => dayKey(s.startedAt, tz)));
+  const monday = weekKey(today);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const day = addDays(monday, i);
+    const ofDay = sessions.filter((s) => dayKey(s.startedAt, tz) === day);
+    const best = ofDay.find((s) => s.status === 'COMPLETE') ?? ofDay[0];
+    return { day, status: (best?.status ?? 'NONE') as DayStatus, source: best?.source ?? null, isToday: day === today };
+  });
+  const done = days.filter((d) => completeDays.has(d.day)).length;
+
+  let weeksCompleted = 0;
+  for (let w = weekKey(startDay); w < monday; w = addDays(w, 7)) {
+    let n = 0;
+    for (let i = 0; i < 7; i++) if (completeDays.has(addDays(w, i))) n++;
+    if (n >= goal) weeksCompleted++;
+  }
+  return { goal, done, days, weeksCompleted };
+}

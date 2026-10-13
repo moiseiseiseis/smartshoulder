@@ -101,15 +101,52 @@ class HistorySession {
   const HistorySession(this.startedAt, this.status, this.verified, this.repsDone, this.repsPrescribed);
 }
 
+/// Un día de la semana actual (lunes a domingo) para el sendero de "Su rumbo".
+class WeekDayInfo {
+  final DateTime day;
+  final DayStatus status;
+  final bool? verified; // null si no hubo sesión
+  final bool isToday;
+  const WeekDayInfo(this.day, this.status, this.verified, this.isToday);
+}
+
+/// Meta semanal (contexto/09 §3.1): días con sesión completa contra la frecuencia prescrita.
+class WeekInfo {
+  final int goal;
+  final int done;
+  final List<WeekDayInfo> days;
+  final int weeksCompleted;
+  const WeekInfo(this.goal, this.done, this.days, this.weeksCompleted);
+
+  bool get reached => done >= goal;
+  int get remaining => (goal - done).clamp(0, goal);
+
+  factory WeekInfo.fromJson(Map<String, dynamic> j) => WeekInfo(
+        j['goal'] as int,
+        j['done'] as int,
+        (j['days'] as List)
+            .map((d) => WeekDayInfo(
+                  DateTime.parse(d['day'] as String),
+                  parseDayStatus(d['status'] as String),
+                  d['source'] == null ? null : d['source'] == 'VERIFIED',
+                  d['isToday'] as bool,
+                ))
+            .toList(),
+        j['weeksCompleted'] as int,
+      );
+}
+
 class HistoryData {
   final List<HistoryDay> calendar;
   final int streak;
+  final WeekInfo? week;
   final List<HistorySession> sessions;
-  const HistoryData(this.calendar, this.streak, this.sessions);
+  const HistoryData(this.calendar, this.streak, this.week, this.sessions);
 
   factory HistoryData.fromJson(Map<String, dynamic> j) => HistoryData(
         (j['calendar'] as List).map((d) => HistoryDay(DateTime.parse(d['day'] as String), parseDayStatus(d['status'] as String))).toList(),
         j['streak'] as int,
+        j['week'] == null ? null : WeekInfo.fromJson(j['week'] as Map<String, dynamic>),
         (j['sessions'] as List).map((s) {
           final results = s['results'] as List;
           return HistorySession(

@@ -31,7 +31,7 @@ abstract class DeviceClient {
   DeviceSnapshot get snapshot;
   Stream<DeviceEvent> get events;
 
-  /// Busca el reloj por su nombre (p. ej. "SS-54F5") y se conecta.
+  /// Busca el reloj por su nombre (p. ej. "RR-54F5") y se conecta.
   Future<void> connect(String name);
   Future<void> disconnect();
 

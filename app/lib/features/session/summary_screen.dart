@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/providers.dart';
 import '../../core/theme.dart';
+import '../../ui/brand.dart';
+import '../../ui/components.dart';
 import 'session_screen.dart';
 
-/// Resumen y envío. El dolor y el esfuerzo son datos que reporta el paciente, no los mide el reloj.
+/// Resumen y envío. El dolor y el esfuerzo los reporta el paciente; no los mide el reloj.
 class SummaryScreen extends ConsumerStatefulWidget {
   final SessionOutcome outcome;
   const SummaryScreen({super.key, required this.outcome});
@@ -57,7 +60,6 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
   @override
   Widget build(BuildContext context) {
     final e = widget.outcome.engine;
-    final t = Theme.of(context).textTheme;
     final complete = !e.endedEarly && e.totalDone >= e.totalPrescribed * 0.9;
     final sentDone = _sent == _Sent.sent || _sent == _Sent.queued;
 
@@ -66,80 +68,68 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
       child: Scaffold(
         body: SafeArea(
           child: ListView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
             children: [
-              Icon(complete ? Icons.emoji_events_outlined : Icons.thumb_up_alt_outlined, size: 64, color: complete ? SsColors.verified : SsColors.primary),
-              const SizedBox(height: 12),
-              Text(complete ? '¡Completaste tu sesión!' : '¡Buen trabajo!', style: t.headlineMedium),
+              Center(child: complete ? const AnimatedIsotipo(size: 112, delay: Duration(milliseconds: 200)) : const RumboIsotipo(size: 96)),
+              const SizedBox(height: 16),
+              Text(complete ? 'Sesión completa' : 'Buen trabajo', textAlign: TextAlign.center, style: RumboText.screenTitle.copyWith(fontSize: 30)),
               const SizedBox(height: 6),
               Text(
-                complete ? 'Hiciste todas tus repeticiones de hoy.' : 'Hiciste ${e.totalDone} de ${e.totalPrescribed} repeticiones. Cada sesión cuenta.',
-                style: t.bodyLarge,
+                complete
+                    ? 'Hizo todas sus repeticiones de hoy.'
+                    : 'Hizo ${e.totalDone} de ${e.totalPrescribed} repeticiones. Cada sesión cuenta.',
+                textAlign: TextAlign.center,
+                style: RumboText.bodyRegular.copyWith(color: RumboColors.slate),
               ),
               const SizedBox(height: 12),
-              Align(alignment: Alignment.centerLeft, child: SourceChip(verified: widget.outcome.verified)),
+              Center(child: StatusChip(kind: widget.outcome.verified ? StatusKind.verified : StatusKind.reported)),
               const SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(children: [
-                    for (var i = 0; i < e.plan.length; i++)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(children: [
-                          Icon(
-                            e.results[i].repsDone >= e.plan[i].sets * e.plan[i].reps * 0.9 ? Icons.check_circle : Icons.radio_button_unchecked,
-                            color: e.results[i].repsDone >= e.plan[i].sets * e.plan[i].reps * 0.9 ? SsColors.verified : SsColors.muted,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text(e.plan[i].name, style: t.bodyLarge)),
-                          Text('${e.results[i].repsDone} / ${e.plan[i].sets * e.plan[i].reps}', style: t.titleMedium),
-                        ]),
-                      ),
-                  ]),
-                ),
+              RumboCard(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Column(children: [
+                  for (var i = 0; i < e.plan.length; i++) _ResultRow(name: e.plan[i].name, done: e.results[i].repsDone, total: e.plan[i].sets * e.plan[i].reps),
+                ]),
               ),
               const SizedBox(height: 28),
-              Text('¿Cuánto dolor sentiste?', style: t.titleLarge),
+              const Text('¿Cuánto dolor sintió?', style: RumboText.sectionTitle),
               const SizedBox(height: 4),
-              Text('0 = nada · 10 = el peor dolor', style: t.bodySmall),
+              const Text('Toque un número. 0 es sin dolor y 10 el peor dolor.', style: RumboText.help),
               const SizedBox(height: 12),
-              _scale(_pain, (v) => setState(() => _pain = v), danger: true, enabled: !sentDone),
+              PainScale(value: _pain, enabled: !sentDone, onChanged: (v) => setState(() => _pain = v)),
               const SizedBox(height: 24),
-              Text('¿Qué tan pesado se sintió?', style: t.titleLarge),
+              const Text('¿Qué tan pesado se sintió?', style: RumboText.sectionTitle),
               const SizedBox(height: 12),
-              Wrap(spacing: 8, children: [
+              Wrap(spacing: 8, runSpacing: 8, children: [
                 for (final (label, v) in [('Fácil', 3), ('Moderado', 6), ('Muy pesado', 9)])
                   ChoiceChip(
-                    label: Text(label, style: const TextStyle(fontSize: 18)),
+                    label: Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 17, fontWeight: FontWeight.w800)),
                     selected: _effort == v,
                     onSelected: sentDone ? null : (_) => setState(() => _effort = v),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    showCheckmark: false,
+                    selectedColor: RumboColors.primarySoft,
+                    side: BorderSide(color: _effort == v ? RumboColors.primary : RumboColors.line, width: 2),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   ),
               ]),
               const SizedBox(height: 32),
               if (!sentDone)
-                FilledButton(
+                FilledButton.icon(
                   onPressed: _sent == _Sent.sending ? null : _send,
-                  child: _sent == _Sent.sending
-                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
-                      : const Text('Enviar a mi fisioterapeuta'),
+                  icon: _sent == _Sent.sending
+                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white))
+                      : const Icon(LucideIcons.send),
+                  label: const Text('Enviar a mi fisioterapeuta'),
                 )
               else ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: SsColors.verifiedSoft, borderRadius: BorderRadius.circular(16)),
-                  child: Row(children: [
-                    Icon(_sent == _Sent.sent ? Icons.cloud_done_outlined : Icons.cloud_queue, color: SsColors.verified),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _sent == _Sent.sent ? 'Enviado a tu fisioterapeuta.' : 'Guardado. Se enviará a tu fisioterapeuta cuando tengas conexión.',
-                        style: const TextStyle(fontSize: 17, color: SsColors.verified, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ]),
+                InlineNotice(
+                  kind: StatusKind.verified,
+                  text: _sent == _Sent.sent
+                      ? 'Enviado. Su fisioterapeuta ya puede verla.'
+                      : 'Guardado en el teléfono. Se enviará cuando tenga internet.',
                 ),
+                const SizedBox(height: 16),
+                const _WeekAfterSend(),
                 const SizedBox(height: 16),
                 FilledButton(onPressed: () => context.go('/'), child: const Text('Listo')),
               ],
@@ -149,29 +139,91 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
       ),
     );
   }
+}
 
-  /// Escala 0–10 en dos filas de botones grandes (un toque, fácil con una mano).
-  Widget _scale(int? value, ValueChanged<int> onChanged, {bool danger = false, bool enabled = true}) {
+class _ResultRow extends StatelessWidget {
+  final String name;
+  final int done, total;
+  const _ResultRow({required this.name, required this.done, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    final ok = done >= total * 0.9;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(children: [
+        Icon(ok ? LucideIcons.circleCheck : LucideIcons.circle, color: ok ? RumboColors.success : RumboColors.mist, size: 24),
+        const SizedBox(width: 12),
+        Expanded(child: Text(name, style: RumboText.body)),
+        Text('$done de $total', style: RumboText.body.copyWith(fontWeight: FontWeight.w800)),
+      ]),
+    );
+  }
+}
+
+/// Después de enviar: cómo va la meta de la semana (sin presión).
+class _WeekAfterSend extends ConsumerWidget {
+  const _WeekAfterSend();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final week = ref.watch(historyProvider).valueOrNull?.week;
+    if (week == null) return const SizedBox.shrink();
+    final text = week.reached
+        ? 'Cumplió su meta de la semana: ${week.done} de ${week.goal} sesiones.'
+        : 'Lleva ${week.done} de ${week.goal} sesiones esta semana.';
+    return RumboCard(
+      child: Row(children: [
+        ProgressRing(
+          progress: week.goal == 0 ? 0 : week.done / week.goal,
+          size: 56,
+          stroke: 7,
+          color: week.reached ? RumboColors.success : RumboColors.primary,
+          child: Icon(week.reached ? LucideIcons.flag : LucideIcons.calendarDays, size: 22, color: week.reached ? RumboColors.success : RumboColors.primary),
+        ),
+        const SizedBox(width: 16),
+        Expanded(child: Text(text, style: RumboText.body)),
+      ]),
+    );
+  }
+}
+
+/// Escala de dolor propia (doc 09 §3.2): 0–10 en dos filas de botones de 56 dp, gradiente de color
+/// y caritas originales en 0, 5 y 10. No usa la escala Wong-Baker (tiene derechos de autor).
+class PainScale extends StatelessWidget {
+  final int? value;
+  final bool enabled;
+  final ValueChanged<int> onChanged;
+  const PainScale({super.key, required this.value, required this.onChanged, this.enabled = true});
+
+  static Color colorFor(int i) => Color.lerp(RumboColors.success, RumboColors.danger, i / 10)!;
+
+  @override
+  Widget build(BuildContext context) {
     Widget button(int i) => Expanded(
           child: Padding(
             padding: const EdgeInsets.all(3),
             child: Semantics(
               button: true,
               selected: value == i,
-              label: 'Dolor $i',
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: enabled ? () => onChanged(i) : null,
-                child: Container(
-                  height: 56,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: value == i ? (danger ? Color.lerp(SsColors.verified, SsColors.danger, i / 10) : SsColors.primary) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E5EA)),
+              label: 'Dolor $i${i == 0 ? ', sin dolor' : i == 10 ? ', el peor dolor' : ''}',
+              child: ExcludeSemantics(
+                child: Material(
+                  color: value == i ? colorFor(i) : RumboColors.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(RumboRadius.md),
+                    side: BorderSide(color: value == i ? colorFor(i) : RumboColors.line, width: 2),
                   ),
-                  child: ExcludeSemantics(
-                    child: Text('$i', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: value == i ? Colors.white : null)),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(RumboRadius.md),
+                    onTap: enabled ? () => onChanged(i) : null,
+                    child: SizedBox(
+                      height: 56,
+                      child: Center(
+                        child: Text('$i',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 22, fontWeight: FontWeight.w900, color: value == i ? Colors.white : RumboColors.ink)),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -181,6 +233,58 @@ class _SummaryScreenState extends ConsumerState<SummaryScreen> {
     return Column(children: [
       Row(children: [for (var i = 0; i <= 5; i++) button(i)]),
       Row(children: [for (var i = 6; i <= 10; i++) button(i), const Expanded(child: SizedBox())]),
+      const SizedBox(height: 8),
+      const ExcludeSemantics(
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          _FaceLabel(mood: 1, label: 'Sin dolor'),
+          _FaceLabel(mood: 0, label: 'Moderado'),
+          _FaceLabel(mood: -1, label: 'El peor dolor'),
+        ]),
+      ),
     ]);
   }
+}
+
+class _FaceLabel extends StatelessWidget {
+  final double mood; // 1 sonrisa, 0 neutral, -1 molestia
+  final String label;
+  const _FaceLabel({required this.mood, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = PainScale.colorFor(((1 - mood) * 5).round());
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      CustomPaint(size: const Size.square(26), painter: _FacePainter(mood, color)),
+      const SizedBox(width: 6),
+      Text(label, style: RumboText.help.copyWith(fontSize: 15)),
+    ]);
+  }
+}
+
+class _FacePainter extends CustomPainter {
+  final double mood;
+  final Color color;
+  _FacePainter(this.mood, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.09
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(Offset(w / 2, w / 2), w / 2 - stroke.strokeWidth / 2, stroke);
+    final eye = Paint()..color = color;
+    canvas.drawCircle(Offset(w * 0.36, w * 0.4), w * 0.06, eye);
+    canvas.drawCircle(Offset(w * 0.64, w * 0.4), w * 0.06, eye);
+    final y = w * 0.66;
+    final mouth = Path()
+      ..moveTo(w * 0.32, y)
+      ..quadraticBezierTo(w * 0.5, y + mood * w * 0.18, w * 0.68, y);
+    canvas.drawPath(mouth, stroke);
+  }
+
+  @override
+  bool shouldRepaint(_FacePainter oldDelegate) => oldDelegate.mood != mood;
 }

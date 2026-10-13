@@ -33,7 +33,7 @@ class BleSource:
 
     # ---------- API para la UI (no bloqueante) ----------
     def scan(self, callback):
-        """Busca relojes SmartShoulder y llama callback([nombres]) desde el hilo BLE."""
+        """Busca relojes Rumbo Rehab y llama callback([nombres]) desde el hilo BLE."""
         async def go():
             try:
                 devices = await BleakScanner.discover(timeout=4.0)

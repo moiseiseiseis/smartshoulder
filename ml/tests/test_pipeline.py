@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from smartshoulder_ml.config import WINDOW
-from smartshoulder_ml.data import Recording, SetLabel, contiguous_runs, load_dataset
-from smartshoulder_ml.preprocess import Normalizer, estimate_mirror_axis, mirror, mirror_signs
-from smartshoulder_ml.repcounter import count_reps
-from smartshoulder_ml.synthetic import _exercise, _nulo, generate
-from smartshoulder_ml.windows import label_window, make_windows
+from rumbo_ml.config import WINDOW
+from rumbo_ml.data import Recording, SetLabel, contiguous_runs, load_dataset
+from rumbo_ml.preprocess import Normalizer, estimate_mirror_axis, mirror, mirror_signs
+from rumbo_ml.repcounter import count_reps
+from rumbo_ml.synthetic import _exercise, _nulo, generate
+from rumbo_ml.windows import label_window, make_windows
 
 rng = np.random.default_rng(0)
 
@@ -76,10 +76,10 @@ def test_counter_ignores_rest():
 
 # ---------------------------------------------------------------- de punta a punta (pequeño)
 def test_end_to_end_export(tmp_path):
-    from smartshoulder_ml.config import STEP_TRAIN
-    from smartshoulder_ml.export import export
-    from smartshoulder_ml.pipeline import fit_cnn
-    from smartshoulder_ml.windows import windows_from
+    from rumbo_ml.config import STEP_TRAIN
+    from rumbo_ml.export import export
+    from rumbo_ml.pipeline import fit_cnn
+    from rumbo_ml.windows import windows_from
 
     generate(tmp_path / "ds", subjects=2)
     recs = load_dataset(tmp_path / "ds")
@@ -100,7 +100,7 @@ def test_parity_with_real_xiao_capture():
     El contador del firmware arrancó con `expect` cerca de la muestra 6 (cualquier arranque entre 4 y 7 coincide)."""
     from pathlib import Path
 
-    from smartshoulder_ml.parity import python_reps
+    from rumbo_ml.parity import python_reps
 
     d = np.loadtxt(Path(__file__).parent / "data" / "paridad_flexion_xiao.csv", delimiter=",", skiprows=1, dtype=np.int64)
     samples = [(int(r[0]), r[1:].tolist()) for r in d]

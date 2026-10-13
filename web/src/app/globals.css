@@ -1,32 +1,35 @@
 @import "tailwindcss";
 
-/* SmartShoulder — tokens del sistema visual (contexto/07 §5.4).
+/* Rumbo Rehab — tokens del sistema visual (contexto/07 §5.4).
    Verificado y reportado siempre van con ícono + color + texto, nunca solo color. */
 :root {
-  --bg: #f5f6f8;
-  --surface: #ffffff;
-  --surface-2: #f0f2f5;
-  --border: #e2e5ea;
-  --text: #17202a;
-  --muted: #5d6874;
-  --primary: #0d5c70;
-  --primary-hover: #0a4a5b;
-  --primary-soft: #e3eff2;
+  /* Marca Rumbo Rehab (brand/identidad-marca-rumbo-rehab.md §10) */
+  --bg: #FAF8F4;          /* Crema */
+  --surface: #FFFFFF;
+  --surface-2: #F3F1F8;
+  --border: #E8E5F0;      /* Línea */
+  --text: #1E1B3A;        /* Tinta */
+  --muted: #55516E;       /* Pizarra */
+  --primary: #3F3A9E;     /* Índigo */
+  --primary-hover: #2A2766;
+  --primary-soft: #E2E0F4;
+  --accent: #F2B33D;      /* Girasol: meta, hoy */
+  --accent-deep: #B87C0C;
 
-  --verified: #0b7a62;
-  --verified-soft: #dff3ec;
+  /* Semánticos: siempre ícono + color + texto */
+  --verified: #0B7A62;
+  --verified-soft: #E3F3EE;
   --reported: #915400;
-  --reported-soft: #fcefd9;
-
-  --danger: #b42318;
-  --danger-soft: #fdeceb;
-  --ok: #1a7f37;
+  --reported-soft: #FBF0DC;
+  --danger: #B42318;
+  --danger-soft: #FBE7E5;
+  --ok: #0B7A62;
 
   /* calendario de apego */
-  --day-complete: #1f9d72;
-  --day-incomplete: #f2c46d;
-  --day-aborted: #e2766c;
-  --day-none: #e6e9ee;
+  --day-complete: #0B7A62;
+  --day-incomplete: #F0D9A8;
+  --day-aborted: #E9A39B;
+  --day-none: #E8E5F0;
 }
 
 @theme inline {
@@ -46,14 +49,16 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-ok: var(--ok);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent);
+  --color-accent-deep: var(--accent-deep);
+  --font-sans: var(--font-nunito);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-nunito), system-ui, sans-serif;
 }
 
 .tabular {

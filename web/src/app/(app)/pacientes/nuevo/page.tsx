@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, Hand, Watch } from "lucide-react";
+import { ArrowLeft, Check, Pencil, Watch } from "lucide-react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
@@ -69,7 +69,7 @@ export default function NewPatientPage() {
             </div>
             <div>
               <h1 className="text-xl font-semibold">{name} ya está dado de alta</h1>
-              <p className="mt-1 text-sm text-muted">Pídele que instale la app SmartShoulder y escanee este código.</p>
+              <p className="mt-1 text-sm text-muted">Pídele que instale la app Rumbo Rehab y escanee este código.</p>
             </div>
             <QRCodeSVG value={created.invite.qr} size={200} marginSize={2} />
             <div className="font-mono text-3xl font-semibold tracking-[0.25em]">{created.invite.code}</div>
@@ -142,7 +142,7 @@ export default function NewPatientPage() {
           <div className="space-y-3">
             <p className="text-sm text-muted">¿El paciente se lleva un reloj a casa?</p>
             <button type="button" onClick={() => setDeviceId("")} className={cx("flex w-full items-start gap-3 rounded-lg border p-3 text-left", !deviceId ? "border-primary bg-primary-soft" : "border-border hover:bg-surface-2")}>
-              <Hand className="mt-0.5 size-5 text-reported" />
+              <Pencil className="mt-0.5 size-5 text-reported" />
               <div>
                 <div className="text-sm font-medium">Sin reloj · apego reportado</div>
                 <div className="text-xs text-muted">El paciente marca sus series a mano en la app.</div>

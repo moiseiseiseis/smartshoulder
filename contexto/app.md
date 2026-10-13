@@ -1,5 +1,7 @@
 # SmartShoulder — Benchmark de Avena y plan de la app de adherencia
 
+> **Nota (oct 2026):** el proyecto ahora se llama **Rumbo Rehab** (ver `08-marca-rumbo-rehab.md`). Este documento conserva el nombre original SmartShoulder; las rutas de código cambiaron a `firmware/rumbo/`, `ml/rumbo_ml/` y el reloj se anuncia como `RR-XXXX`.
+
 **Origen:** recomendación del mentor (oct 2026): tomar el esquema de [Avena](https://avena.io/) como referencia casi literal para la app de adherencia y el modelo de negocio. Exploración hecha el 6 oct 2026 a partir del sitio público, Google Play y Trustpilot. Este documento alimenta el Lean Canvas y el entregable "Modelo de negocio / Business Model Plan".
 
 **Actualización 6 oct:** se agregó la sección 6 (cómo entra el wearable al modelo), en respuesta al comentario del mentor de que el hardware a veces frena la escalabilidad.

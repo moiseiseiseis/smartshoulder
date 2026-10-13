@@ -1,19 +1,19 @@
-# Contrato BLE — SmartShoulder v1
+# Contrato BLE — Rumbo Rehab v1
 
 **Fuente de verdad** del protocolo entre la XIAO, la app Flutter y la herramienta de captura.
 Cualquier cambio aquí se refleja en el mismo commit en:
-`firmware/smartshoulder/config.h`, `tools/capture/contract.py` y `app/lib/core/contract/ble_contract.dart`.
+`firmware/rumbo/config.h`, `tools/capture/contract.py` y `app/lib/core/contract.dart`.
 
 Todos los enteros son **little-endian**.
 
 ## Identidad
 
-- Nombre de advertising: `SS-XXXX` (XXXX = últimos 2 bytes de la MAC en hex). Es el código corto que se imprime en la carcasa y que ve el fisio.
+- Nombre de advertising: `RR-XXXX` (XXXX = últimos 2 bytes de la MAC en hex). Es el código corto que se imprime en la carcasa y que ve el fisio.
 - UUID base: `0ed8XXXX-8e11-4ac8-bea3-882874982696`
 
 | Elemento | UUID | Propiedades |
 |---|---|---|
-| Servicio SmartShoulder | `0ed80001-8e11-4ac8-bea3-882874982696` | — |
+| Servicio Rumbo Rehab | `0ed80001-8e11-4ac8-bea3-882874982696` | — |
 | `CONTROL` | `0ed80002-8e11-4ac8-bea3-882874982696` | Write, Write without response |
 | `EVENTS` | `0ed80003-8e11-4ac8-bea3-882874982696` | Notify |
 | `RAW_STREAM` | `0ed80004-8e11-4ac8-bea3-882874982696` | Notify |

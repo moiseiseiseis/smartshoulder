@@ -1,6 +1,6 @@
 "use client";
 
-import { Hand, Watch } from "lucide-react";
+import { CircleCheck, Pencil } from "lucide-react";
 import useSWR from "swr";
 import { Card, DataDisclaimer, ErrorBox, Spinner, Stat } from "@/components/ui";
 import { fetcher } from "@/lib/api";
@@ -34,13 +34,13 @@ export default function ClinicPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card title={<span className="inline-flex items-center gap-1.5 text-verified"><Watch className="size-4" /> Verificado por el dispositivo</span>}>
+        <Card title={<span className="inline-flex items-center gap-1.5 text-verified"><CircleCheck className="size-4" /> Verificado por el dispositivo</span>}>
           <div className="grid grid-cols-2 gap-4">
             <Stat label="Apego promedio" value={fmtPct(data.avgAdherence7.verified)} tone="verified" />
             <Stat label="Sesiones registradas" value={data.sessionsLast7.verified} />
           </div>
         </Card>
-        <Card title={<span className="inline-flex items-center gap-1.5 text-reported"><Hand className="size-4" /> Reportado por el paciente</span>}>
+        <Card title={<span className="inline-flex items-center gap-1.5 text-reported"><Pencil className="size-4" /> Reportado por el paciente</span>}>
           <div className="grid grid-cols-2 gap-4">
             <Stat label="Apego promedio" value={fmtPct(data.avgAdherence7.reported)} tone="reported" />
             <Stat label="Sesiones registradas" value={data.sessionsLast7.reported} />

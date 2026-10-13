@@ -49,13 +49,13 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class SmartShoulderApp extends ConsumerWidget {
-  const SmartShoulderApp({super.key});
+class RumboApp extends ConsumerWidget {
+  const RumboApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'SmartShoulder',
+      title: 'Rumbo Rehab',
       theme: buildTheme(),
       routerConfig: ref.watch(routerProvider),
       debugShowCheckedModeBanner: false,

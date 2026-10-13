@@ -20,7 +20,7 @@ import type { AuthUser } from '../auth/auth.types';
 import { CurrentUser, Roles } from '../auth/auth.types';
 import { CLINIC_TZ, dayRange } from '../common/clinic-time';
 import { PrismaService } from '../common/prisma.service';
-import { addDays, calendar, classifySession, dayKey } from './adherence.calc';
+import { addDays, calendar, classifySession, dayKey, weekProgress } from './adherence.calc';
 import { AdherenceService, patientScope } from './adherence.service';
 import { CreateSessionDto } from './sessions.dto';
 
@@ -153,7 +153,11 @@ export class SessionsService {
       return k >= from && k <= to;
     });
     const streak = this.streak(sessions.map((s) => ({ day: dayKey(s.startedAt, CLINIC_TZ), complete: s.status === 'COMPLETE' })));
-    return { calendar: calendar(inRange, from, to, CLINIC_TZ), streak, sessions: inRange.map(sessionView) };
+    const rx = await this.prisma.prescription.findFirst({ where: { patientId: user.patientId, active: true } });
+    const week = rx
+      ? weekProgress(sessions, rx.frequencyPerWeek, dayKey(rx.startDate, CLINIC_TZ), dayKey(new Date(), CLINIC_TZ), CLINIC_TZ)
+      : null;
+    return { calendar: calendar(inRange, from, to, CLINIC_TZ), streak, week, sessions: inRange.map(sessionView) };
   }
 
   /** Días seguidos (hasta hoy o ayer) con al menos una sesión completa. */

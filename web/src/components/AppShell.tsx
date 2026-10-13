@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { auth, type SessionUser } from "@/lib/api";
+import { Logo } from "./Logo";
 import { cx } from "./ui";
 
 const NAV = [
@@ -35,8 +36,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-border bg-surface md:flex">
         <div className="px-5 py-5">
-          <div className="text-base font-bold tracking-tight text-primary">SmartShoulder</div>
-          <div className="truncate text-xs text-muted">{user.clinic.name}</div>
+          <Logo size={26} />
+          <div className="mt-2 truncate text-xs font-semibold text-muted">{user.clinic.name}</div>
         </div>
         <nav className="flex-1 space-y-0.5 px-3">
           {NAV.map(({ href, label, icon: Icon }) => (

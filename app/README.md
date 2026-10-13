@@ -1,4 +1,4 @@
-# SmartShoulder — app del paciente (Flutter)
+# Rumbo Rehab — app del paciente (Flutter)
 
 Guía la sesión de ejercicios en casa, se conecta al reloj por Bluetooth LE y envía la sesión al backend (contexto/01).
 
@@ -13,7 +13,7 @@ flutter build apk --debug                                          # build/app/o
 
 El servidor también se puede cambiar en **Ajustes** (desde la bienvenida: "Ajustes de conexión").
 
-Para probar: código **DEMO23** (paciente demo en vivo, reloj SS-54F5).
+Para probar: código **DEMO23** (paciente demo en vivo, reloj RR-54F5).
 
 ## Reloj simulado (plan B de la demo)
 

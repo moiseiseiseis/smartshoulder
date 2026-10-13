@@ -1,4 +1,4 @@
-# SmartShoulder API (NestJS + Prisma + PostgreSQL)
+# Rumbo Rehab API (NestJS + Prisma + PostgreSQL)
 
 Backend compartido de la app del paciente y el dashboard del fisio (contexto/04 y 07).
 
@@ -13,7 +13,7 @@ npm run db:seed               # BORRA la base y carga los datos demo
 npm run start:dev             # http://localhost:3001  ·  Swagger en /docs
 ```
 
-Accesos demo: `fisio@demo.mx` / `demo1234` · `admin@demo.mx` / `demo1234` · app del paciente: código **DEMO23** (reloj SS-54F5).
+Accesos demo: `fisio@demo.mx` / `demo1234` · `admin@demo.mx` / `demo1234` · app del paciente: código **DEMO23** (reloj RR-54F5).
 
 El seed se basa en la fecha de hoy: vuelve a correrlo la mañana del Demo Day para que la historia quede al día.
 

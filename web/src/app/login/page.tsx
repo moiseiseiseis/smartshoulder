@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Logo } from "@/components/Logo";
 import { Button, ErrorBox, Field, inputClass } from "@/components/ui";
 import { auth, post, type SessionUser } from "@/lib/api";
 
@@ -31,8 +32,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <form onSubmit={submit} className="w-full max-w-sm space-y-5 rounded-2xl border border-border bg-surface p-8">
         <div>
-          <div className="text-xl font-bold tracking-tight text-primary">SmartShoulder</div>
-          <p className="mt-1 text-sm text-muted">Sabe qué pacientes sí hacen sus ejercicios en casa.</p>
+          <Logo size={34} />
+          <p className="mt-4 text-sm text-muted">Sabe qué pacientes sí hacen sus ejercicios en casa.</p>
         </div>
         <Field label="Correo">
           <input className={inputClass} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

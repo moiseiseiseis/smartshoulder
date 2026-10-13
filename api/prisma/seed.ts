@@ -89,7 +89,7 @@ const PROFILES: Profile[] = [
     template: 'manguito',
     startDaysAgo: 20,
     source: 'VERIFIED',
-    device: 'SS-D001',
+    device: 'RR-D001',
     attend: (i, n) => (i >= n - 4 ? 0 : i < 10 ? 0.9 : 0.6),
     reps: (ex, i, _r, q) => (ex === 3 && i >= 5 && q < 0.85 ? 0.2 : 1),
     pain: (i) => Math.max(2, 6 - Math.floor(i / 5)),
@@ -114,7 +114,7 @@ const PROFILES: Profile[] = [
     template: 'manguito',
     startDaysAgo: 12,
     source: 'VERIFIED',
-    device: 'SS-D002',
+    device: 'RR-D002',
     attend: () => 0.95,
     reps: full,
     pain: (i) => Math.max(1, 5 - Math.floor(i / 3)),
@@ -139,7 +139,7 @@ const PROFILES: Profile[] = [
     template: 'manguito',
     startDaysAgo: 15,
     source: 'VERIFIED',
-    device: 'SS-D003',
+    device: 'RR-D003',
     attend: () => 0.7,
     reps: (_ex, i, r) => (i > 8 ? 0.2 + r() * 0.3 : 0.95),
     aborts: (i) => i > 8,
@@ -206,13 +206,13 @@ async function main() {
     templates[t.key] = { id: created.id, frequencyPerWeek: t.frequencyPerWeek, items: t.items };
   }
 
-  // Flota: el reloj real (SS-54F5) y relojes demo.
+  // Flota: el reloj real (RR-54F5) y relojes demo.
   const devices: Record<string, string> = {};
-  for (const [bleName, isDemo] of [['SS-54F5', false], ['SS-D001', true], ['SS-D002', true], ['SS-D003', true], ['SS-D004', true], ['SS-D005', true]] as const) {
+  for (const [bleName, isDemo] of [['RR-54F5', false], ['RR-D001', true], ['RR-D002', true], ['RR-D003', true], ['RR-D004', true], ['RR-D005', true]] as const) {
     const d = await prisma.device.create({ data: { clinicId: clinic.id, bleName, isDemo, fwVersion: 1, modelVersion: isDemo ? 1 : 0 } });
     devices[bleName] = d.id;
   }
-  await prisma.device.update({ where: { id: devices['SS-D004'] }, data: { status: 'CLEANING' } });
+  await prisma.device.update({ where: { id: devices['RR-D004'] }, data: { status: 'CLEANING' } });
 
   let seed = 42;
   for (const p of PROFILES) {
@@ -278,22 +278,49 @@ async function main() {
     }
   }
 
-  // Paciente de la demo en vivo, con el reloj real.
+  // Paciente de la demo en vivo, con el reloj real. Trae unos días de historial verificado
+  // (días hábiles anteriores a hoy) para que "Su rumbo" se vea con el sendero avanzado.
+  const liveStart = addDays(TODAY, -9);
   const live = await prisma.patient.create({
-    data: { clinicId: clinic.id, physioId: physio.id, displayName: 'Paciente demo en vivo', diagnosis: 'Demostración (sujeto sano)', affectedArm: 'RIGHT', isDemo: true },
+    data: { clinicId: clinic.id, physioId: physio.id, displayName: 'Daniel Ramírez', diagnosis: 'Demostración en vivo (sujeto sano)', affectedArm: 'RIGHT', isDemo: true, createdAt: localTime(liveStart, 9) },
   });
-  await prisma.prescription.create({
+  const liveItems = [[1, 1, 5], [2, 1, 5]] as const;
+  const liveRx = await prisma.prescription.create({
     data: {
       patientId: live.id,
       frequencyPerWeek: 5,
-      startDate: localTime(TODAY, 8),
+      startDate: localTime(liveStart, 9),
       createdById: physio.id,
       notes: 'Sesión corta para la demostración.',
-      items: { create: [[1, 1, 5], [2, 1, 5]].map(([exerciseId, sets, reps], order) => ({ exerciseId, sets, reps, restSec: 20, order })) },
+      items: { create: liveItems.map(([exerciseId, sets, reps], order) => ({ exerciseId, sets, reps, restSec: 20, order })) },
     },
   });
-  await prisma.deviceAssignment.create({ data: { deviceId: devices['SS-54F5'], patientId: live.id } });
-  await prisma.device.update({ where: { id: devices['SS-54F5'] }, data: { status: 'ASSIGNED' } });
+  await prisma.deviceAssignment.create({ data: { deviceId: devices['RR-54F5'], patientId: live.id, assignedAt: localTime(liveStart, 9) } });
+  await prisma.device.update({ where: { id: devices['RR-54F5'] }, data: { status: 'ASSIGNED' } });
+  for (let i = 0; i < 9; i++) {
+    const day = addDays(liveStart, i);
+    const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+    if (weekday === 0 || weekday === 6) continue;
+    const start = localTime(day, 18, 10);
+    await prisma.session.create({
+      data: {
+        clientSessionId: `seed-live-${day}`,
+        patientId: live.id,
+        prescriptionId: liveRx.id,
+        source: 'VERIFIED',
+        deviceId: devices['RR-54F5'],
+        fwVersion: 2,
+        modelVersion: 0,
+        startedAt: start,
+        endedAt: new Date(start.getTime() + 3 * 60_000),
+        status: 'COMPLETE',
+        painScore: 2,
+        effortScore: 4,
+        isDemo: true,
+        results: { create: liveItems.map(([exerciseId, sets, reps]) => ({ exerciseId, setsPrescribed: sets, repsPrescribed: sets * reps, setsDone: sets, repsDone: sets * reps })) },
+      },
+    });
+  }
   await prisma.inviteCode.create({ data: { code: 'DEMO23', patientId: live.id, expiresAt: new Date(Date.now() + 60 * 86_400_000) } });
 
   const counts = await prisma.session.groupBy({ by: ['source'], _count: true });

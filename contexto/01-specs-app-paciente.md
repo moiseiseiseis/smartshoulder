@@ -1,5 +1,7 @@
 # SmartShoulder — 01. Especificaciones genéricas de la app del paciente (Flutter)
 
+> **Nota (oct 2026):** el proyecto ahora se llama **Rumbo Rehab** (ver `08-marca-rumbo-rehab.md`). Este documento conserva el nombre original SmartShoulder; las rutas de código cambiaron a `firmware/rumbo/`, `ml/rumbo_ml/` y el reloj se anuncia como `RR-XXXX`.
+
 **Versión:** 0.1 (borrador para prototipo de Demo Day)
 **Relacionado:** `02-specs-firmware-xiao.md` (protocolo BLE), `04-specs-plataforma-fisioterapeuta.md` (backend compartido), `05-specs-ejercicios-protocolo.md` (catálogo de ejercicios)
 

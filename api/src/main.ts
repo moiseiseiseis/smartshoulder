@@ -10,7 +10,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
 
   const doc = new DocumentBuilder()
-    .setTitle('SmartShoulder API')
+    .setTitle('Rumbo Rehab API')
     .setDescription('Backend compartido de la app del paciente y el dashboard del fisioterapeuta')
     .setVersion('0.1')
     .addBearerAuth()
@@ -19,6 +19,6 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3001);
   await app.listen(port, '0.0.0.0'); // 0.0.0.0: accesible desde el celular en la misma red
-  console.log(`SmartShoulder API en http://localhost:${port}  ·  docs en /docs`);
+  console.log(`Rumbo Rehab API en http://localhost:${port}  ·  docs en /docs`);
 }
 bootstrap();

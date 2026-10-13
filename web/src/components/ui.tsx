@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Hand, Loader2, Watch } from "lucide-react";
+import { AlertTriangle, CircleCheck, Loader2, Pencil } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { alertText } from "@/lib/format";
 import type { Alert, Source } from "@/lib/types";
@@ -51,7 +51,7 @@ export function Button({ variant = "primary", loading, className, children, ...p
 /** Origen del dato de apego. Siempre ícono + texto. */
 export function SourceBadge({ source, long }: { source: Source; long?: boolean }) {
   const verified = source === "VERIFIED";
-  const Icon = verified ? Watch : Hand;
+  const Icon = verified ? CircleCheck : Pencil; // identidad-marca §3.2
   const label = verified ? (long ? "Verificado por el dispositivo" : "Verificado") : long ? "Reportado por el paciente" : "Reportado";
   return (
     <span

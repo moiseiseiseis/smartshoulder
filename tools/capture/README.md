@@ -12,7 +12,7 @@ python -m pip install bleak pyserial matplotlib pytest
 ## Uso
 
 ```
-python app.py              # guarda en SmartShoulder/dataset/ (ignorado por git: tiene datos personales)
+python app.py              # guarda en dataset/ en la raíz del repo (ignorado por git: tiene datos personales)
 ```
 
 1. **Reloj:** Bluetooth → *Buscar* → *Conectar*. *Identificar* hace parpadear el LED azul. Respaldo: *Cable USB* y elegir el puerto COM.

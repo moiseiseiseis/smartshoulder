@@ -1,5 +1,5 @@
-// Contrato BLE de SmartShoulder: espejo de contracts/ble.md.
-// Cualquier cambio aquí va en el mismo commit que firmware/smartshoulder/config.h.
+// Contrato BLE de Rumbo Rehab: espejo de contracts/ble.md.
+// Cualquier cambio aquí va en el mismo commit que firmware/rumbo/config.h.
 import 'dart:typed_data';
 
 String _uuid(String short) => '0ed8$short-8e11-4ac8-bea3-882874982696';

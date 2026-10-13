@@ -15,6 +15,8 @@ class Storage {
   static const _simulator = 'simulated_device';
   static const _pending = 'pending_sessions';
   static const _voice = 'voice_enabled';
+  static const _voiceCounting = 'voice_counting';
+  static const _sounds = 'sounds_enabled';
 
   String? get token => _p.getString(_token);
   Future<void> setToken(String? v) => v == null ? _p.remove(_token) : _p.setString(_token, v);
@@ -28,8 +30,16 @@ class Storage {
   bool get simulator => _p.getBool(_simulator) ?? false;
   Future<void> setSimulator(bool v) => _p.setBool(_simulator, v);
 
+  /// Voz para las instrucciones ("Rotación externa, serie uno de tres…").
   bool get voice => _p.getBool(_voice) ?? true;
   Future<void> setVoice(bool v) => _p.setBool(_voice, v);
+
+  /// La voz cuenta cada repetición en lugar del sonido suave (opcional; por omisión, sonido).
+  bool get voiceCounting => _p.getBool(_voiceCounting) ?? false;
+  Future<void> setVoiceCounting(bool v) => _p.setBool(_voiceCounting, v);
+
+  bool get sounds => _p.getBool(_sounds) ?? true;
+  Future<void> setSounds(bool v) => _p.setBool(_sounds, v);
 
   /// Sesiones terminadas que aún no se suben (sin internet).
   List<Map<String, dynamic>> get pending =>

@@ -1,4 +1,4 @@
-"""SmartShoulder — herramienta de captura del dataset (contexto/05 §3).
+"""Rumbo Rehab — herramienta de captura del dataset (contexto/05 §3).
 
 Uso:  python app.py [carpeta_dataset]      (por defecto: ../../dataset)
 
@@ -47,7 +47,7 @@ class CaptureApp:
         self.device_status: dict | None = None
         self.battery: int | None = None
 
-        root.title("SmartShoulder — Captura de dataset")
+        root.title("Rumbo Rehab — Captura de dataset")
         root.geometry("1400x860")
         self._build_ui()
         root.bind("<space>", self._on_space)
@@ -179,7 +179,7 @@ class CaptureApp:
         if self.transport_var.get() == "serial":
             self._on_transport()
             return
-        self.log("Buscando relojes SmartShoulder…")
+        self.log("Buscando relojes Rumbo Rehab…")
         self.ble.scan(lambda names: self.q.put(("scan", names)))
 
     def _on_connect(self):

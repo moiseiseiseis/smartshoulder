@@ -2,8 +2,8 @@
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-const TOKEN_KEY = "ss_token";
-const USER_KEY = "ss_user";
+const TOKEN_KEY = "rr_token";
+const USER_KEY = "rr_user";
 
 export interface SessionUser {
   id: string;

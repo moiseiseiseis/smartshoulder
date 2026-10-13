@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/device/device_client.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../core/theme.dart';
+import '../../ui/brand.dart';
+import '../../ui/components.dart';
+import '../../ui/exercise_video.dart';
 
-/// Inicio: la sesión de hoy y un solo botón grande (contexto/01 §4.2).
+/// "Su rumbo": la semana como un camino, la sesión de hoy y un solo botón grande.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -19,7 +24,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Al abrir: subir lo que haya quedado pendiente y reconectar el reloj si lo tiene.
+    // Al abrir: subir lo pendiente y reconectar el reloj si tiene uno asignado.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final left = await ref.read(queueProvider).flush();
       if (left == 0) ref.invalidate(historyProvider);
@@ -28,9 +33,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final device = ref.read(deviceProvider);
         if (me.deviceName != null && device.snapshot.conn == ConnState.disconnected) device.connect(me.deviceName!);
       } catch (_) {
-        // Sin conexión: la pantalla ya muestra el error y el botón de reintentar.
+        // Sin conexión: la pantalla ya lo explica.
       }
     });
+  }
+
+  Future<void> _refresh() async {
+    ref.invalidate(meProvider);
+    ref.invalidate(historyProvider);
+    await ref.read(meProvider.future);
   }
 
   @override
@@ -38,26 +49,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final me = ref.watch(meProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SmartShoulder', style: TextStyle(fontWeight: FontWeight.w700, color: SsColors.primary)),
+        toolbarHeight: 64,
+        title: const RumboLogo(fontSize: 24),
         actions: [
-          IconButton(tooltip: 'Mi historial', iconSize: 28, onPressed: () => context.push('/history'), icon: const Icon(Icons.calendar_month_outlined)),
-          IconButton(tooltip: 'Ajustes', iconSize: 28, onPressed: () => context.push('/settings'), icon: const Icon(Icons.settings_outlined)),
+          IconButton(tooltip: 'Mi historial', iconSize: 26, onPressed: () => context.push('/history'), icon: const Icon(LucideIcons.calendarDays)),
+          IconButton(tooltip: 'Ajustes', iconSize: 26, onPressed: () => context.push('/settings'), icon: const Icon(LucideIcons.settings)),
+          const SizedBox(width: 4),
         ],
       ),
       body: me.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorView(message: e.toString(), onRetry: () => ref.invalidate(meProvider)),
-        data: (m) => RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(meProvider);
-            ref.invalidate(historyProvider);
-            await ref.read(meProvider.future);
-          },
-          child: _HomeBody(me: m),
+        error: (e, _) => EmptyState(
+          icon: LucideIcons.wifiOff,
+          title: 'No pudimos conectarnos',
+          body: 'Revise que tenga internet e intente de nuevo. Sus sesiones guardadas no se pierden.',
+          actionLabel: 'Intentar de nuevo',
+          onAction: _refresh,
         ),
+        data: (m) => RefreshIndicator(onRefresh: _refresh, child: _HomeBody(me: m)),
       ),
     );
   }
+}
+
+String _greeting() {
+  final h = DateTime.now().hour;
+  return h < 12 ? 'Buenos días' : (h < 19 ? 'Buenas tardes' : 'Buenas noches');
 }
 
 class _HomeBody extends ConsumerWidget {
@@ -66,110 +83,196 @@ class _HomeBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final t = Theme.of(context).textTheme;
     final rx = me.prescription;
     final history = ref.watch(historyProvider).valueOrNull;
     final snap = ref.watch(deviceSnapshotProvider).valueOrNull ?? const DeviceSnapshot();
     final hasDevice = me.deviceName != null;
     final verified = hasDevice && snap.connected;
     final pending = ref.watch(queueProvider).pendingCount;
+    final doneToday = history?.doneToday ?? false;
+    final away = _daysAway(history);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
       children: [
-        Text('Hola, ${me.firstName}', style: t.headlineMedium),
-        const SizedBox(height: 4),
-        Text('${me.clinicName} · ${me.physioName}', style: t.bodySmall),
+        Text('${_greeting()}, ${me.firstName}', style: RumboText.screenTitle),
+        const SizedBox(height: 2),
+        Text('${me.physioName} · ${me.clinicName}', style: RumboText.help),
         const SizedBox(height: 20),
-        if (history != null && history.streak > 0) ...[
-          _Streak(days: history.streak, doneToday: history.doneToday),
+        if (away != null) ...[
+          InlineNotice(kind: StatusKind.reported, text: away),
           const SizedBox(height: 16),
         ],
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Tu sesión de hoy', style: t.titleLarge),
-              const SizedBox(height: 4),
-              if (rx != null) Text('${rx.exercises.length} ejercicios · ${_duration(rx)}', style: t.bodySmall),
-              const SizedBox(height: 12),
-              if (rx == null)
-                Text('Tu fisioterapeuta aún no te asigna ejercicios.', style: t.bodyLarge)
-              else
-                for (final e in rx.exercises)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(children: [
-                      const Icon(Icons.circle, size: 8, color: SsColors.primary),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(e.name, style: t.bodyLarge)),
-                      Text('${e.sets} × ${e.reps}', style: t.titleMedium),
-                    ]),
-                  ),
-              if (rx?.notes != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: SsColors.primarySoft, borderRadius: BorderRadius.circular(12)),
-                  child: Text('Nota de tu fisio: ${rx!.notes}', style: t.bodyMedium),
-                ),
-              ],
+        if (history?.week != null) ...[_WeekCard(week: history!.week!), const SizedBox(height: 16)],
+        if (rx == null)
+          const RumboCard(
+            child: Column(children: [
+              Icon(LucideIcons.clipboardList, size: 36, color: RumboColors.primary),
+              SizedBox(height: 12),
+              Text('Su fisioterapeuta aún no le asigna ejercicios', textAlign: TextAlign.center, style: RumboText.sectionTitle),
+              SizedBox(height: 4),
+              Text('Cuando lo haga, aparecerán aquí.', textAlign: TextAlign.center, style: RumboText.help),
             ]),
-          ),
-        ),
+          )
+        else
+          _TodayCard(rx: rx, rightArm: me.rightArm, doneToday: doneToday),
         const SizedBox(height: 16),
         _DeviceTile(me: me, snap: snap),
         const SizedBox(height: 24),
-        FilledButton(
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(72)),
-          onPressed: rx == null ? null : () => context.push('/session', extra: (me, verified)),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Icon(Icons.play_arrow_rounded, size: 34),
-            const SizedBox(width: 8),
-            Text(history?.doneToday == true ? 'Hacer otra sesión' : 'Comenzar sesión', style: const TextStyle(fontSize: 22)),
-          ]),
-        ),
-        if (hasDevice && !snap.connected) ...[
+        if (rx != null)
+          FilledButton.icon(
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(68)),
+            onPressed: () => context.push('/session', extra: (me, verified)),
+            icon: const Icon(LucideIcons.play, size: 26),
+            label: Text(doneToday ? 'Hacer otra sesión' : 'Comenzar sesión', style: const TextStyle(fontSize: 21)),
+          ),
+        if (hasDevice && !snap.connected && rx != null) ...[
           const SizedBox(height: 8),
-          Text('Si empiezas sin el reloj, marcarás tus series a mano.', textAlign: TextAlign.center, style: t.bodySmall),
+          const Text('Si empieza sin el reloj, marcará sus series a mano.', textAlign: TextAlign.center, style: RumboText.help),
         ],
         if (pending > 0) ...[
           const SizedBox(height: 16),
-          Text('$pending sesión(es) guardada(s) en el teléfono, pendiente(s) de enviar.', textAlign: TextAlign.center, style: t.bodySmall),
+          InlineNotice(
+            kind: StatusKind.reported,
+            text: pending == 1 ? 'Una sesión está guardada en el teléfono y se enviará cuando haya internet.' : '$pending sesiones están guardadas en el teléfono y se enviarán cuando haya internet.',
+          ),
         ],
       ],
     );
   }
+
+  /// "No vemos sesiones desde el martes. Cuando pueda, retomamos." (identidad §13). Nunca culpa.
+  String? _daysAway(HistoryData? h) {
+    if (h == null || h.sessions.isEmpty) return null;
+    final last = h.sessions.map((s) => s.startedAt).reduce((a, b) => a.isAfter(b) ? a : b);
+    final days = DateTime.now().difference(DateTime(last.year, last.month, last.day)).inDays;
+    if (days < 3) return null;
+    final when = days < 7 ? 'el ${DateFormat('EEEE', 'es').format(last)}' : 'el ${DateFormat("d 'de' MMMM", 'es').format(last)}';
+    return 'No vemos sesiones desde $when. Cuando pueda, retomamos.';
+  }
 }
 
-/// Duración aproximada: ~4 s por repetición más los descansos entre series y ejercicios.
-String _duration(Prescription rx) {
-  final sec = rx.totalReps * 4 + rx.exercises.fold(0, (a, e) => a + e.restSec * e.sets);
-  final min = (sec / 60).round();
-  return min <= 1 ? 'un par de minutos' : 'unos $min minutos';
-}
+class _WeekCard extends StatelessWidget {
+  final WeekInfo week;
+  const _WeekCard({required this.week});
 
-class _Streak extends StatelessWidget {
-  final int days;
-  final bool doneToday;
-  const _Streak({required this.days, required this.doneToday});
+  static const _letters = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  static const _names = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: SsColors.verifiedSoft, borderRadius: BorderRadius.circular(20)),
-        child: Row(children: [
-          const Icon(Icons.local_fire_department, color: SsColors.verified, size: 32),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              doneToday ? '¡Hoy ya cumpliste! Llevas $days ${days == 1 ? 'día' : 'días'} seguidos.' : 'Llevas $days ${days == 1 ? 'día' : 'días'} seguidos. ¡No rompas la racha!',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: SsColors.verified),
+  Widget build(BuildContext context) {
+    final days = [
+      for (var i = 0; i < week.days.length; i++)
+        () {
+          final d = week.days[i];
+          final mark = switch (d.status) {
+            DayStatus.complete => d.verified == true ? DayMark.verified : DayMark.reported,
+            DayStatus.incomplete || DayStatus.aborted => DayMark.incomplete,
+            DayStatus.none => DayMark.pending,
+          };
+          final spoken = switch (mark) {
+            DayMark.verified => 'sesión completa, verificada por el reloj',
+            DayMark.reported => 'sesión completa, marcada a mano',
+            DayMark.incomplete => 'sesión incompleta',
+            DayMark.pending => d.isToday ? 'hoy, pendiente' : 'sin sesión',
+          };
+          return WeekDay(_letters[i], mark, d.isToday, '${_names[i]}: $spoken');
+        }(),
+    ];
+    final title = week.reached ? 'Meta de la semana cumplida' : 'Su rumbo esta semana';
+    final body = week.reached
+        ? 'Hizo ${week.done} de ${week.goal} sesiones. Su constancia se nota.'
+        : week.remaining == 1
+            ? 'Le falta 1 sesión para su meta de la semana.'
+            : 'Le faltan ${week.remaining} sesiones para su meta de la semana.';
+    return RumboCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Semantics(
+            label: '${week.done} de ${week.goal} sesiones esta semana',
+            child: ExcludeSemantics(
+              child: ProgressRing(
+                progress: week.goal == 0 ? 0 : week.done / week.goal,
+                size: 76,
+                stroke: 9,
+                color: week.reached ? RumboColors.success : RumboColors.primary,
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text('${week.done}', style: RumboText.kpi.copyWith(fontSize: 28, color: week.reached ? RumboColors.success : RumboColors.primary)),
+                  Text('de ${week.goal}', style: RumboText.label.copyWith(fontSize: 13)),
+                ]),
+              ),
             ),
           ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: RumboText.sectionTitle),
+              const SizedBox(height: 2),
+              Text(body, style: RumboText.help.copyWith(color: RumboColors.ink, fontSize: 16)),
+            ]),
+          ),
         ]),
-      );
+        const SizedBox(height: 20),
+        WeekPath(days: days),
+        if (week.weeksCompleted > 0) ...[
+          const SizedBox(height: 12),
+          NeutralChip(week.weeksCompleted == 1 ? '1 semana cumplida' : '${week.weeksCompleted} semanas cumplidas', icon: LucideIcons.flag),
+        ],
+      ]),
+    );
+  }
+}
+
+class _TodayCard extends StatelessWidget {
+  final Prescription rx;
+  final bool rightArm;
+  final bool doneToday;
+  const _TodayCard({required this.rx, required this.rightArm, required this.doneToday});
+
+  @override
+  Widget build(BuildContext context) {
+    final n = rx.exercises.length;
+    final minutes = ((rx.totalReps * 4 + rx.exercises.fold(0, (a, e) => a + e.restSec * e.sets)) / 60).round();
+    return RumboCard(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text(doneToday ? 'Hoy ya completó su sesión' : 'Su sesión de hoy', style: RumboText.sectionTitle)),
+          if (doneToday) const Icon(LucideIcons.circleCheck, color: RumboColors.success, size: 26),
+        ]),
+        const SizedBox(height: 2),
+        Text(
+          doneToday
+              ? 'Si quiere, puede repetirla.'
+              : 'Hoy le tocan ${n == 1 ? '1 ejercicio' : '$n ejercicios'}, ${minutes <= 1 ? 'un par de minutos' : 'unos $minutes minutos'}. ¿Empezamos?',
+          style: RumboText.help.copyWith(fontSize: 16),
+        ),
+        const SizedBox(height: 12),
+        for (final e in rx.exercises)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(children: [
+              SizedBox(width: 56, child: ExerciseVideo(exerciseId: e.exerciseId, mirror: !rightArm, fallbackTitle: '')),
+              const SizedBox(width: 14),
+              Expanded(child: Text(e.name, style: RumboText.body)),
+              Text('${e.sets} × ${e.reps}', style: RumboText.body.copyWith(fontWeight: FontWeight.w900, color: RumboColors.primary)),
+            ]),
+          ),
+        if (rx.notes != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: RumboColors.primarySoft, borderRadius: BorderRadius.circular(RumboRadius.md)),
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Icon(LucideIcons.messageCircle, size: 20, color: RumboColors.primaryInk),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Nota de su fisioterapeuta: ${rx.notes}', style: RumboText.body.copyWith(fontSize: 16, color: RumboColors.primaryInk))),
+            ]),
+          ),
+        ],
+      ]),
+    );
+  }
 }
 
 class _DeviceTile extends ConsumerWidget {
@@ -181,52 +284,39 @@ class _DeviceTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final name = me.deviceName;
     if (name == null) {
-      return const ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(Icons.back_hand_outlined, color: SsColors.reported, size: 32),
-        title: Text('Sin reloj', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        subtitle: Text('Marcarás tus series a mano al terminar cada una.', style: TextStyle(fontSize: 15)),
+      return const RumboCard(
+        padding: EdgeInsets.all(16),
+        child: Row(children: [
+          Icon(LucideIcons.pencil, color: RumboColors.warning, size: 26),
+          SizedBox(width: 14),
+          Expanded(child: Text('Sin reloj: marcará sus series a mano al terminar cada una.', style: RumboText.body)),
+        ]),
       );
     }
     final busy = snap.conn == ConnState.searching || snap.conn == ConnState.connecting;
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        leading: Icon(Icons.watch_outlined, size: 32, color: snap.connected ? SsColors.verified : SsColors.muted),
-        title: Text(
-          snap.connected ? 'Reloj conectado' : (busy ? 'Buscando tu reloj…' : 'Reloj desconectado'),
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          snap.connected ? '$name${snap.battery != null ? ' · batería ${snap.battery}%' : ''}' : (snap.error ?? '$name · acércalo al teléfono'),
-          style: const TextStyle(fontSize: 15),
-        ),
-        trailing: snap.connected
-            ? (snap.battery != null && snap.battery! < 20 ? const Icon(Icons.battery_alert, color: SsColors.danger) : null)
-            : busy
-                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3))
-                : TextButton(onPressed: () => ref.read(deviceProvider).connect(name), child: const Text('Conectar')),
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-  const _ErrorView({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_off, size: 56, color: SsColors.muted),
-            const SizedBox(height: 16),
-            Text(message, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 16),
-            OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
+    final lowBattery = snap.connected && snap.battery != null && snap.battery! < 20;
+    final (title, subtitle) = snap.connected
+        ? (lowBattery ? 'El reloj tiene poca batería' : 'Reloj conectado', lowBattery ? 'Póngalo a cargar antes de su sesión.' : '$name${snap.battery != null ? ' · batería ${snap.battery}%' : ''}')
+        : busy
+            ? ('Buscando su reloj…', 'Acérquelo al teléfono.')
+            : ('Reloj desconectado', snap.error ?? '$name · acérquelo al teléfono.');
+    return RumboCard(
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      child: Row(children: [
+        Icon(lowBattery ? LucideIcons.batteryLow : LucideIcons.watch,
+            size: 28, color: lowBattery ? RumboColors.danger : (snap.connected ? RumboColors.success : RumboColors.slate)),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: RumboText.body.copyWith(fontWeight: FontWeight.w800)),
+            Text(subtitle, style: RumboText.help),
           ]),
         ),
-      );
+        if (busy)
+          const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3)))
+        else if (!snap.connected)
+          TextButton(onPressed: () => ref.read(deviceProvider).connect(name), child: const Text('Conectar')),
+      ]),
+    );
+  }
 }

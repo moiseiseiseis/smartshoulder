@@ -2,11 +2,11 @@
 services:
   db:
     image: postgres:17-alpine
-    container_name: smartshoulder-db
+    container_name: rumbo-db
     environment:
-      POSTGRES_USER: smartshoulder
-      POSTGRES_PASSWORD: smartshoulder
-      POSTGRES_DB: smartshoulder
+      POSTGRES_USER: rumbo
+      POSTGRES_PASSWORD: rumbo
+      POSTGRES_DB: rumbo
     ports:
       - "5434:5432"
     volumes:

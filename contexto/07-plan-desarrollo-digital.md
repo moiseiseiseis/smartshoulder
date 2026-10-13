@@ -1,5 +1,7 @@
 # SmartShoulder — 07. Plan de desarrollo digital (firmware XIAO, app del paciente, web del fisio)
 
+> **Nota (oct 2026):** el proyecto ahora se llama **Rumbo Rehab** (ver `08-marca-rumbo-rehab.md`). Este documento conserva el nombre original SmartShoulder; las rutas de código cambiaron a `firmware/rumbo/`, `ml/rumbo_ml/` y el reloj se anuncia como `RR-XXXX`.
+
 **Versión:** 0.1 (6 oct 2026)
 **Relacionado:** todos los docs 01–06 y `app.md` (benchmark de Avena y modelo de negocio)
 

@@ -1,10 +1,11 @@
-# SmartShoulder
+# Rumbo Rehab
 
 Apego terapéutico en rehabilitación de hombro, **verificado por un reloj** (XIAO nRF52840 Sense + TinyML), con app para el paciente y dashboard para el fisioterapeuta.
 
 | Carpeta | Qué es | Detalle |
 |---|---|---|
-| `contexto/` | Especificaciones (01–06), benchmark de Avena y plan (07) | |
+| `contexto/` | Especificaciones (01–06), plan (07), marca y upgrade (08–11), funcionalidades (12) | |
+| `brand/` | Identidad de marca: manual, logos, isotipos, íconos de app y favicons | [Manual](brand/identidad-marca-rumbo-rehab.md) |
 | `contracts/ble.md` | Contrato Bluetooth entre reloj, app y herramienta de captura | Fuente de verdad |
 | `firmware/` | Firmware de la XIAO (Arduino, core mbed de Seeed) | v1: modo captura |
 | `tools/capture/` | Captura del dataset (Python) | [README](tools/capture/README.md) |
@@ -26,6 +27,6 @@ Accesos demo: `fisio@demo.mx` / `demo1234` (dashboard) · código `DEMO23` (app)
 ## Firmware
 
 ```
-arduino-cli compile --fqbn Seeeduino:mbed:xiaonRF52840Sense --upload -p COM5 firmware/smartshoulder
+arduino-cli compile --fqbn Seeeduino:mbed:xiaonRF52840Sense --upload -p COM5 firmware/rumbo
 ```
 Requiere el paquete de placas "Seeed nRF52 mbed-enabled Boards" y la librería ArduinoBLE.

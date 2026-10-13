@@ -225,7 +225,7 @@ export class PatientsService {
 
 /** Contenido del QR que escanea la app: código de invitación + reloj asignado. */
 export function inviteQr(code: string, bleName?: string | null) {
-  return `smartshoulder://invite?code=${code}${bleName ? `&device=${bleName}` : ''}`;
+  return `rumbo://invite?code=${code}${bleName ? `&device=${bleName}` : ''}`;
 }
 
 // ============================================================ controladores

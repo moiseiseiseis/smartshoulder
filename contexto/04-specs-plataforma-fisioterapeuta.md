@@ -1,5 +1,7 @@
 # SmartShoulder — 04. Plataforma del fisioterapeuta (+ backend compartido)
 
+> **Nota (oct 2026):** el proyecto ahora se llama **Rumbo Rehab** (ver `08-marca-rumbo-rehab.md`). Este documento conserva el nombre original SmartShoulder; las rutas de código cambiaron a `firmware/rumbo/`, `ml/rumbo_ml/` y el reloj se anuncia como `RR-XXXX`.
+
 **Versión:** 0.1
 **Relacionado:** `01-specs-app-paciente.md`, `05-specs-ejercicios-protocolo.md`
 

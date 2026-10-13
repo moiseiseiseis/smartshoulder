@@ -12,6 +12,7 @@ import {
   sourceMetrics,
   weekKey,
   weekly,
+  weekProgress,
 } from './adherence.calc';
 
 const TZ = 'America/Mexico_City';
@@ -140,5 +141,25 @@ describe('detalle', () => {
     const rows = perExercise(sessions, presc);
     expect(rows.find((r) => r.exerciseId === 3)?.skippedSessions).toBe(2);
     expect(mostSkipped(rows)).toBe(3);
+  });
+});
+
+describe('meta semanal', () => {
+  it('cuenta días con sesión completa en la semana y semanas cumplidas', () => {
+    const s = [
+      ...['2026-09-07', '2026-09-08', '2026-09-09'].map((d) => session(d, 'VERIFIED', [30, 36])), // semana 1: 3 días
+      session('2026-09-14', 'VERIFIED', [30, 36]),
+      session('2026-09-14', 'VERIFIED', [30, 36]), // dos el mismo día cuentan una vez
+      session('2026-09-15', 'VERIFIED', [30, 10]), // incompleta: no cuenta
+    ];
+    const w = weekProgress(s, 3, '2026-09-07', '2026-09-16', TZ);
+    expect(w.done).toBe(1);
+    expect(w.weeksCompleted).toBe(1);
+    expect(w.days.map((d) => d.status)).toEqual(['COMPLETE', 'INCOMPLETE', 'NONE', 'NONE', 'NONE', 'NONE', 'NONE']);
+    expect(w.days[2].isToday).toBe(true);
+  });
+  it('descansar los días que no tocan no afecta', () => {
+    const s = ['2026-09-07', '2026-09-09', '2026-09-11'].map((d) => session(d, 'REPORTED', [30, 36]));
+    expect(weekProgress(s, 3, '2026-09-07', '2026-09-13', TZ).done).toBe(3);
   });
 });

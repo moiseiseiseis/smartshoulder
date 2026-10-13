@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smartshoulder/core/contract.dart';
-import 'package:smartshoulder/core/models.dart';
-import 'package:smartshoulder/features/session/session_engine.dart';
+import 'package:rumbo/core/contract.dart';
+import 'package:rumbo/core/models.dart';
+import 'package:rumbo/features/session/session_engine.dart';
 
 const flex = PlanExercise(exerciseId: 1, name: 'Flexión anterior', instructions: '', sets: 2, reps: 3, restSec: 2);
 const abd = PlanExercise(exerciseId: 2, name: 'Abducción', instructions: '', sets: 1, reps: 2, restSec: 0);

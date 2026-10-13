@@ -1,6 +1,6 @@
 "use client";
 
-import { Hand } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { dayLabel, dayStatusLabel, weekdayLetter } from "@/lib/format";
 import type { AdherenceDetail, DayStatus } from "@/lib/types";
 import { cx } from "./ui";
@@ -43,7 +43,7 @@ export function AdherenceCalendar({ days, startDay }: { days: AdherenceDetail["c
           </span>
         ))}
         <span className="inline-flex items-center gap-1.5">
-          <Hand className="size-3" /> Reportado por el paciente
+          <Pencil className="size-3" /> Reportado por el paciente
         </span>
         {startDay && (
           <span className="inline-flex items-center gap-1.5">
@@ -72,7 +72,7 @@ function Week({ cells, startDay }: { cells: (AdherenceDetail["calendar"][number]
             title={`${dayLabel(c.day)} (${weekdayLetter(c.day)}): ${dayStatusLabel[c.status]}${c.source === "REPORTED" ? " · reportado por el paciente" : c.source === "VERIFIED" ? " · verificado" : ""}`}
             className={cx("flex aspect-square max-h-9 items-center justify-center rounded-md", COLOR[c.status])}
           >
-            {c.source === "REPORTED" && <Hand className="size-3 text-black/50" aria-label="reportado" />}
+            {c.source === "REPORTED" && <Pencil className="size-3 text-black/50" aria-label="reportado" />}
           </div>
         );
       })}

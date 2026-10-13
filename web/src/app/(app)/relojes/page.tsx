@@ -123,7 +123,7 @@ export default function DevicesPage() {
             });
           }}
         >
-          <input className={`${inputClass} max-w-48 font-mono uppercase`} placeholder="SS-XXXX" value={name} onChange={(e) => setName(e.target.value)} minLength={4} maxLength={16} required />
+          <input className={`${inputClass} max-w-48 font-mono uppercase`} placeholder="RR-XXXX" value={name} onChange={(e) => setName(e.target.value)} minLength={4} maxLength={16} required />
           <Button type="submit" loading={busy === "new"}>
             <Plus className="size-4" /> Agregar
           </Button>

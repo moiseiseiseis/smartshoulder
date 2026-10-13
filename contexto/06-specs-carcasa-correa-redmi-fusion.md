@@ -1,5 +1,7 @@
 # SmartShoulder — 06. Carcasa con anclaje para correas del Redmi Watch 5: investigación, especificaciones y modelado en Autodesk Fusion
 
+> **Nota (oct 2026):** el proyecto ahora se llama **Rumbo Rehab** (ver `08-marca-rumbo-rehab.md`). Este documento conserva el nombre original SmartShoulder; las rutas de código cambiaron a `firmware/rumbo/`, `ml/rumbo_ml/` y el reloj se anuncia como `RR-XXXX`.
+
 **Versión:** 0.1. **Solo para prototipo y Demo Day; no es el diseño comercial.**
 **Relacionado:** `02-specs-firmware-xiao.md` (componentes que van dentro), `03-specs-modelo-tinyml.md` (por qué importa la orientación)
 

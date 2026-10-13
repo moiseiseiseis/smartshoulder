@@ -78,14 +78,14 @@ check('código inválido rechazado', (await call('POST', '/auth/redeem', { body:
 check('paciente no ve la lista del fisio', (await call('GET', '/patients', { token: patient })).status === 403);
 
 const me = await call('GET', '/me', { token: patient });
-check('app: /me', me.status === 200 && me.data.device?.bleName === 'SS-54F5' && me.data.prescription.exercises.length === 2);
+check('app: /me', me.status === 200 && me.data.device?.bleName === 'RR-54F5' && me.data.prescription.exercises.length === 2);
 
 const now = Date.now();
 const body = {
   clientSessionId: `smoke-${now}`,
   prescriptionId: me.data.prescription.id,
   source: 'VERIFIED',
-  deviceBleName: 'SS-54F5',
+  deviceBleName: 'RR-54F5',
   fwVersion: 1,
   modelVersion: 0,
   deviceBattery: 88,
@@ -106,7 +106,7 @@ check('sesión verificada sin reloj rechazada', (await call('POST', '/sessions',
 const hist = await call('GET', '/me/sessions', { token: patient });
 check('app: historial y racha', hist.status === 200 && hist.data.streak >= 1, `racha ${hist.data.streak}`);
 
-const live = (await call('GET', '/patients', { token: physio })).data.find((p) => p.displayName === 'Paciente demo en vivo');
+const live = (await call('GET', '/patients', { token: physio })).data.find((p) => p.displayName === 'Daniel Ramírez');
 check('fisio ve la sesión en vivo', live.lastSessionAt !== null, `apego 7d ${live.adherence7}%`);
 
 console.log(failures ? `\n${failures} fallas` : '\nTodo bien');

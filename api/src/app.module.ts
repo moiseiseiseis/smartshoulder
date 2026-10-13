@@ -9,7 +9,7 @@ import { ManagementModule } from './management/management.module';
 class HealthController {
   @Get('health')
   health() {
-    return { ok: true, service: 'smartshoulder-api' };
+    return { ok: true, service: 'rumbo-api' };
   }
 }
 
