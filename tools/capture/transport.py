@@ -64,6 +64,9 @@ class BleSource:
     def identify(self):
         self.send(bytes([c.CMD_IDENTIFY]))
 
+    def power_off(self):
+        self.send(bytes([c.CMD_POWER_OFF]))
+
     # ---------- interno ----------
     async def _connect(self, name: str):
         try:
@@ -155,6 +158,9 @@ class SerialSource:
 
     def identify(self):
         self.send_line("identify")
+
+    def power_off(self):
+        self.send_line("off")
 
     def _reader(self):
         while self.port and self.port.is_open:

@@ -30,6 +30,17 @@ Por defecto lee `../dataset` (la carpeta que llena `tools/capture`). La exportac
 y `model_card.json` (versión, commit, huella del dataset, sujetos y métricas LOSO, para ISO 14971).
 `--to-firmware` copia los dos headers a `firmware/rumbo/`.
 
+## Con un solo sujeto (antes de tener voluntarios)
+
+```
+python -m rumbo_ml.train --model cnn --holdout speed --export 1 --to-firmware  # valida dejando fuera un ritmo
+python -m rumbo_ml.train --model cnn --holdout arm                              # entrena con un brazo, prueba con el otro
+python -m rumbo_ml.calibrate          # umbrales del contador por ejercicio (copiar a repcounter.py y repcounter.cpp)
+python -m rumbo_ml.verify --model 1 --wrong   # simula el firmware: modelo int8 + contador + verificación
+```
+
+Sin LOSO las métricas son optimistas (misma persona). `verify` sobre los datos de entrenamiento prueba la lógica, no la generalización.
+
 ## Probar sin datos reales
 
 ```

@@ -21,7 +21,7 @@ Este documento describe los ejercicios **para construir el dataset con voluntari
 ## 1. Colocación del dispositivo (igual para todos los ejercicios)
 
 - En la **muñeca del brazo que se ejercita**, dorsal (como un reloj), 1–2 cm arriba del hueso de la muñeca (apófisis estiloides).
-- Siempre con la **misma orientación**: la carcasa tiene una marca (p. ej. "▲ hacia los dedos"; ver doc 06).
+- Siempre con la **misma orientación**: **flecha ▲ hacia el pulgar**, con el **conector USB-C del lado del pulgar** (regla fijada el 18 oct 2026, igual en ambos brazos). *La propuesta original era "▲ hacia los dedos"; la carcasa final quedó con la flecha transversal.*
 - Ajustado sin apretar: que no gire alrededor de la muñeca.
 
 ## 2. Catálogo de ejercicios

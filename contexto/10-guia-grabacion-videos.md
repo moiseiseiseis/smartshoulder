@@ -18,7 +18,7 @@ Imprime o ten abierta esta guía el día de la grabación.
 | 4 | **Rotación interna** | Igual que el 3 | Banda anclada **del mismo lado** | Codo pegado; el antebrazo gira hacia el abdomen |
 | 5 | **Extensión de tríceps** | **De lado** | Banda anclada arriba (marco de puerta) | Codos pegados; se estiran hacia abajo y regresan a 90° |
 | 6 | **Estabilización escapular (remo)** | **De lado** | Banda anclada al frente, a la altura del pecho | Codos hacia atrás junto al cuerpo; pausa de 1–2 s con los omóplatos juntos |
-| 7 | **Colocación del reloj** | **Primer plano** de la muñeca | El reloj Rumbo y su correa | La flecha ▲ apunta hacia los dedos; ajustado sin apretar, 1–2 cm arriba del hueso de la muñeca |
+| 7 | **Colocación del reloj** | **Primer plano** de la muñeca | El reloj Rumbo y su correa | La flecha ▲ apunta hacia el pulgar (USB-C del lado del pulgar); ajustado sin apretar, 1–2 cm arriba del hueso de la muñeca |
 
 Usa la variante de cada ejercicio que el fisio haya definido (doc 05 §0). Lo que muestre el video es lo que harán los pacientes.
 
@@ -34,7 +34,7 @@ Usa la variante de cada ejercicio que el fisio haya definido (doc 05 §0). Lo qu
 ## 3. Quien hace los ejercicios
 
 - **Ropa** de un color que contraste con la pared; **manga corta o ajustada**, para que se vea el brazo y el reloj.
-- **El reloj Rumbo puesto en la muñeca derecha**, con la flecha hacia los dedos.
+- **El reloj Rumbo puesto en la muñeca derecha**, con la flecha hacia el pulgar.
 - **Solo brazo derecho.** Para los pacientes de hombro izquierdo, la app voltea el video en espejo.
 - Postura natural y relajada; expresión tranquila.
 - Si no eres tú, consigue su **consentimiento por escrito para usar su imagen** en la app y en la presentación.
@@ -57,7 +57,7 @@ Idealmente presente durante la grabación. Si no, que revise los clips antes de 
 
 - Pasa los archivos **tal cual salgan del celular**, sin editar ni comprimir (WhatsApp los comprime: mejor cable, Drive o correo).
 - Nómbralos como la tabla: `1-flexion.mp4`, `2-abduccion.mp4`, `3-rotacion-externa.mp4`, `4-rotacion-interna.mp4`, `5-triceps.mp4`, `6-remo.mp4`, `7-colocacion.mp4`.
-- Claude los recorta a cuadrado, los ajusta para que el bucle sea continuo, los comprime a menos de 1 MB y los integra en la app.
+- Se recortan a cuadrado, se ajustan para que el bucle sea continuo, se comprimen a menos de 1 MB y se integran en la app.
 
 ## 7. Lista para el día de la grabación
 

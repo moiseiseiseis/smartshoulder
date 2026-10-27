@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .config import AMBIGUOUS_MAX_FRACTION, LABEL_MIN_FRACTION, WINDOW
+from .config import AMBIGUOUS_MAX_FRACTION, CLASS_MERGE, LABEL_MIN_FRACTION, WINDOW
 from .data import Recording, contiguous_runs
 from .preprocess import mirror
 
@@ -47,6 +47,8 @@ def label_window(labels: np.ndarray) -> int | None:
 def make_windows(rec: Recording, step: int, keep_ambiguous: bool = False) -> Windows:
     x = mirror(rec.x, rec.arm)
     lab = rec.sample_labels()
+    for src, dst in CLASS_MERGE.items():
+        lab[lab == src] = dst
     xs, ys = [], []
     for i0, i1 in contiguous_runs(rec.t_ms):
         for s in range(i0, i1 - WINDOW + 1, step):

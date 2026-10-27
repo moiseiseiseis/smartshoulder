@@ -11,7 +11,7 @@ from .config import CLASSES, N_CLASSES, STEP_INFERENCE, STEP_TRAIN
 from .data import Recording
 from .models import Baseline, build_cnn, class_weights
 from .preprocess import Normalizer, mirror
-from .repcounter import RepParams, count_reps, FIRMWARE_PARAMS
+from .repcounter import RepParams, count_reps, params_for
 from .windows import Windows, windows_from
 
 
@@ -76,7 +76,7 @@ class LosoResult:
 
     def report(self) -> str:
         lines = [
-            f"Modelo {self.kind} · LOSO ({len(self.per_subject)} sujetos, {len(self.y_true)} ventanas de prueba)",
+            f"Modelo {self.kind} · {len(self.per_subject)} pliegues, {len(self.y_true)} ventanas de prueba",
             f"  accuracy {self.accuracy:.3f}   F1 macro {self.f1_macro:.3f}   NULO→ejercicio {self.nulo_false_positive:.1%}",
             "  F1 por sujeto: " + "  ".join(f"{s} {v:.2f}" for s, v in sorted(self.per_subject.items())),
             "  Matriz de confusión (filas = real, columnas = predicho):",
@@ -104,7 +104,45 @@ def loso(recordings: list[Recording], kind: str = "cnn", epochs: int = 30, max_f
         preds.append(p)
         per_subject[s] = float(f1_score(test.y, p, average="macro", zero_division=0))
         log(f"  · {s}: F1 {per_subject[s]:.3f} ({len(test)} ventanas)")
-    return LosoResult(kind, np.concatenate(trues), np.concatenate(preds), per_subject)
+    return LosoResult(f"{kind} · LOSO", np.concatenate(trues), np.concatenate(preds), per_subject)
+
+
+def _drop_sets(r: Recording, speed: str) -> Recording:
+    """Quita las muestras de las series de ese ritmo (el hueco evita que una ventana las cruce)."""
+    held = [s for s in r.sets if s.exercise_id and s.speed == speed]
+    keep = np.ones(len(r.t_ms), bool)
+    for s in held:
+        keep &= ~((r.t_ms >= s.start_ms) & (r.t_ms < s.end_ms))
+    return Recording(r.name, r.subject, r.arm, r.t_ms[keep], r.x[keep], [s for s in r.sets if s not in held])
+
+
+def holdout(recordings: list[Recording], split: str, kind: str = "cnn", epochs: int = 30, log=print) -> LosoResult:
+    """Validación con un solo sujeto (antes de tener varios voluntarios).
+
+    split="arm":   entrena con un brazo y prueba con el otro (ya espejado). Incluye NULO.
+    split="speed": entrena sin las series de un ritmo y prueba con ellas (solo ventanas de ejercicio).
+    Es optimista frente a LOSO: la persona de prueba es la misma del entrenamiento.
+    """
+    trues, preds, per = [], [], {}
+    if split == "arm":
+        folds = [(r.name, [o for o in recordings if o is not r], windows_from([r], STEP_INFERENCE)) for r in recordings]
+    elif split == "speed":
+        folds = []
+        for sp in sorted({s.speed for r in recordings for s in r.sets if s.exercise_id}):
+            test = windows_from([Recording(r.name, r.subject, r.arm, r.t_ms, r.x, [s for s in r.sets if s.exercise_id and s.speed == sp])
+                                 for r in recordings], STEP_INFERENCE)
+            folds.append((sp, [_drop_sets(r, sp) for r in recordings], test.take(test.y > 0)))
+    else:
+        raise ValueError(split)
+    for name, train_recs, test in folds:
+        train = windows_from(train_recs, STEP_TRAIN)
+        model = Baseline().fit(train.x, train.y) if kind == "baseline" else fit_cnn(train, epochs=epochs)
+        p = model.predict(test.x)
+        trues.append(test.y)
+        preds.append(p)
+        per[name] = float(f1_score(test.y, p, average="macro", zero_division=0))
+        log(f"  · prueba {name}: F1 {per[name]:.3f} ({len(test)} ventanas)")
+    return LosoResult(f"{kind} · holdout {split}", np.concatenate(trues), np.concatenate(preds), per)
 
 
 # ----------------------------------------------------------------- contador
@@ -138,8 +176,9 @@ class CountResult:
 COUNT_PAD_MS = 600   # la última repetición se completa cuando la señal filtrada vuelve al reposo, justo después de la serie
 
 
-def evaluate_counter(recordings: list[Recording], params: RepParams = FIRMWARE_PARAMS, default_reps: int = 10) -> CountResult:
-    """Real = marcas de repetición si las hay; si no, las del protocolo (10 por serie)."""
+def evaluate_counter(recordings: list[Recording], params: RepParams | None = None, default_reps: int = 10) -> CountResult:
+    """Real = marcas de repetición si las hay; si no, las del protocolo (10 por serie).
+    params=None: umbrales de cada ejercicio (como el firmware); durante NULO, los de flexión."""
     rows = []
     nulo_reps, nulo_min = 0, 0.0
     for r in recordings:
@@ -149,9 +188,9 @@ def evaluate_counter(recordings: list[Recording], params: RepParams = FIRMWARE_P
                 continue
             seg = x[(r.t_ms >= s.start_ms) & (r.t_ms < s.end_ms + COUNT_PAD_MS)]
             truth = len(s.rep_markers) or default_reps
-            rows.append((r.name, s.exercise_id, s.speed, truth, count_reps(seg, params)))
+            rows.append((r.name, s.exercise_id, s.speed, truth, count_reps(seg, params or params_for(s.exercise_id))))
         lab = r.sample_labels()
         nulo = x[lab == 0]
-        nulo_reps += count_reps(nulo, params)
+        nulo_reps += count_reps(nulo, params or params_for(1))
         nulo_min += len(nulo) / 50 / 60
     return CountResult(rows, nulo_reps / nulo_min if nulo_min else 0.0)

@@ -1,0 +1,117 @@
+{
+  "version": "model_v1",
+  "date": "2026-10-20T16:42:17",
+  "commit": "b22e9ef",
+  "tflite_bytes": 17464,
+  "params": 9527,
+  "ops": [
+    "CONV_2D",
+    "FULLY_CONNECTED",
+    "MAX_POOL_2D",
+    "MEAN",
+    "RESHAPE",
+    "SOFTMAX"
+  ],
+  "int8_agreement_with_float": 0.996,
+  "normalization": {
+    "mean": {
+      "ax": -0.5981941223144531,
+      "ay": -0.21964594721794128,
+      "az": 0.3518195152282715,
+      "gx": 0.14183130860328674,
+      "gy": -4.289693832397461,
+      "gz": -0.011111050844192505
+    },
+    "std": {
+      "ax": 0.3885432481765747,
+      "ay": 0.5090158581733704,
+      "az": 0.30072322487831116,
+      "gx": 28.90474510192871,
+      "gy": 28.268310546875,
+      "gz": 31.927845001220703
+    }
+  },
+  "mirror_axis": "y",
+  "window": 100,
+  "step": 25,
+  "dataset": "C:\\Proyectos\\SmartShoulder\\dataset",
+  "dataset_hash": "7318d4f2e56c8e16",
+  "subjects": [
+    "S01"
+  ],
+  "validation": "cnn · holdout speed",
+  "loso_f1_macro": 0.9287,
+  "loso_accuracy": 0.9024,
+  "loso_nulo_false_positive": NaN,
+  "loso_per_subject_f1": {
+    "lenta": 0.7714,
+    "normal": 0.7859,
+    "rapida": 0.7212
+  },
+  "loso_confusion": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      31,
+      605,
+      0,
+      0,
+      0,
+      84,
+      0
+    ],
+    [
+      7,
+      0,
+      702,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      38,
+      1,
+      0,
+      1140,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      88,
+      4,
+      0,
+      0,
+      0,
+      558,
+      0
+    ],
+    [
+      129,
+      0,
+      0,
+      0,
+      0,
+      1,
+      546
+    ]
+  ],
+  "count_within_1": 0.75
+}

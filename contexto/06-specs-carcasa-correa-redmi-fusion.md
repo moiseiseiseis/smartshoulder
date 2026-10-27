@@ -60,7 +60,7 @@ Haz también un **calco**: presiona el conector sobre plastilina o toma una foto
 | # | Requisito | Valor guía |
 |---|---|---|
 | R1 | **Orientación única de la placa:** cavidad asimétrica o con tope, para que la XIAO solo entre en una posición | Crítico para el modelo TinyML (doc 03) |
-| R2 | **Marca de orientación** en la tapa ("▲ dedos") | Grabado de 0.4–0.6 mm de profundidad |
+| R2 | **Marca de orientación** en la tapa ("▲ dedos"; *en la carcasa final la flecha quedó transversal: se usa "▲ hacia el pulgar", ver doc 11 §0*) | Grabado de 0.4–0.6 mm de profundidad |
 | R3 | Acceso al **USB-C** sin abrir la carcasa | Ventana de ~9.5 × 3.8 mm (medir el conector) + 0.3 mm de holgura |
 | R4 | LED visible | Orificio de 1.5–2 mm o pared delgada traslúcida sobre el LED RGB |
 | R5 | Acceso al botón **reset** | Orificio de 1.5 mm para presionar con un clip |

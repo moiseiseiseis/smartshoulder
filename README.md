@@ -7,7 +7,7 @@ Apego terapéutico en rehabilitación de hombro, **verificado por un reloj** (XI
 | `contexto/` | Especificaciones (01–06), plan (07), marca y upgrade (08–11), funcionalidades (12) | |
 | `brand/` | Identidad de marca: manual, logos, isotipos, íconos de app y favicons | [Manual](brand/identidad-marca-rumbo-rehab.md) |
 | `contracts/ble.md` | Contrato Bluetooth entre reloj, app y herramienta de captura | Fuente de verdad |
-| `firmware/` | Firmware de la XIAO (Arduino, core mbed de Seeed) | v1: modo captura |
+| `firmware/` | Firmware de la XIAO (Arduino, core mbed de Seeed) | v2: captura + clasificador TinyML |
 | `tools/capture/` | Captura del dataset (Python) | [README](tools/capture/README.md) |
 | `api/` | Backend NestJS + Prisma + PostgreSQL | [README](api/README.md) |
 | `web/` | Dashboard del fisioterapeuta (Next.js) | |
@@ -29,4 +29,4 @@ Accesos demo: `fisio@demo.mx` / `demo1234` (dashboard) · código `DEMO23` (app)
 ```
 arduino-cli compile --fqbn Seeeduino:mbed:xiaonRF52840Sense --upload -p COM5 firmware/rumbo
 ```
-Requiere el paquete de placas "Seeed nRF52 mbed-enabled Boards" y la librería ArduinoBLE.
+Requiere el paquete de placas "Seeed nRF52 mbed-enabled Boards", la librería ArduinoBLE y TensorFlow Lite Micro adaptado a la XIAO (`bash firmware/setup_tflm.sh`, una vez).

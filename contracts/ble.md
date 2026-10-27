@@ -28,9 +28,10 @@ Todos los enteros son **little-endian**.
 | `0x02` | `STOP_SESSION` | — | Termina la sesión o la transmisión; en inferencia emite `SESSION_END` |
 | `0x03` | `SET_ARM` | `u8` 0 = derecho, 1 = izquierdo | Brazo que se rehabilita (espejado de ejes) |
 | `0x04` | `SET_MODE` | `u8` 0 = inferencia, 1 = captura | Solo se acepta fuera de sesión |
-| `0x05` | `SET_EXPECTED` | `u8 exercise_id` (0 = ninguno) | La app indica el ejercicio de la serie actual; el dispositivo solo cuenta repeticiones si el clasificador coincide |
+| `0x05` | `SET_EXPECTED` | `u8 exercise_id` (0 = ninguno) | La app indica el ejercicio de la serie actual. El reloj usa los umbrales del contador de ese ejercicio y solo emite `REP` si el clasificador vio ese ejercicio durante la repetición (rotación externa e interna comparten clase: el modelo no las distingue) |
 | `0x06` | `SYNC_EVENTS` | `u16 from_seq` | Reenvía por `EVENTS` los eventos con `seq ≥ from_seq` guardados en el búfer |
 | `0x07` | `IDENTIFY` | — | Parpadea el LED azul 3 s (para encontrar el reloj correcto en consulta) |
+| `0x08` | `POWER_OFF` | — | Tres destellos rojos y apagado (System OFF). Se enciende al conectar el USB-C o con el botón de reset. También se apaga solo tras 15 min sin conexión ni sesión (si no hay USB) y con batería crítica (< 3.35 V) |
 
 ## `EVENTS` (12 bytes)
 
@@ -38,7 +39,7 @@ Todos los enteros son **little-endian**.
 u8  type          1 = REP, 2 = EXERCISE_CHANGED, 3 = SESSION_END
 u8  exercise_id   catálogo abajo
 u16 rep_index     REP: número de repetición dentro de la serie actual
-u8  confidence    softmax × 255
+u8  confidence    REP: probabilidad media de la clase esperada en las ventanas de la repetición × 255 (0 = sin modelo)
 u8  reserved
 u32 timestamp_ms  desde START_SESSION
 u16 seq           consecutivo desde 0; huecos = eventos perdidos → SYNC_EVENTS
@@ -62,7 +63,7 @@ u8 state      0 = IDLE, 1 = SESSION_ACTIVE, 2 = LOW_BATTERY
 u8 mode       0 = inferencia, 1 = captura
 u8 arm        0 = derecho, 1 = izquierdo
 u8 fw_ver
-u8 model_ver  0 = sin modelo
+u8 model_ver  0 = sin modelo (fw 2 = v1.1, contador sin clasificador); fw 3 = v2 con model_v1
 u8 raw_batch  muestras por paquete de RAW_STREAM
 ```
 
@@ -80,6 +81,6 @@ u8 raw_batch  muestras por paquete de RAW_STREAM
 
 ## Consola serial (desarrollo y respaldo de captura)
 
-115200 baud. Comandos de texto terminados en `\n`: `start`, `stop`, `mode capture`, `mode inference`, `arm R`, `arm L`, `status`.
+115200 baud. Comandos de texto terminados en `\n`: `start`, `stop`, `mode capture`, `mode inference`, `arm R`, `arm L`, `expect N`, `identify`, `off`, `status`.
 En captura, cada muestra se imprime como `D,<sample_index>,<ax>,<ay>,<az>,<gx>,<gy>,<gz>` (valores crudos).
 Las líneas que empiezan con `#` son mensajes informativos.

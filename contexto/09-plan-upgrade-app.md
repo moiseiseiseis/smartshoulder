@@ -56,7 +56,7 @@ La pantalla de **sesión en curso** es la estrella: es la que el paciente usa a 
 | Área | Cambios | Por qué |
 |---|---|---|
 | **Identidad** | Nombre Rumbo Rehab, ícono, splash animado breve, paleta y tipografía nuevas, tono de voz | Primera impresión ante pacientes y jurado |
-| **Bienvenida** | 3 pantallas: *tu fisio prescribe → el reloj cuenta → tu fisio ve tu avance*. Ilustración o foto del reloj en la muñeca con la flecha ▲ hacia los dedos | Explica el valor en 20 s. La orientación correcta del reloj importa para el modelo |
+| **Bienvenida** | 3 pantallas: *tu fisio prescribe → el reloj cuenta → tu fisio ve tu avance*. Ilustración o foto del reloj en la muñeca con la flecha ▲ hacia el pulgar | Explica el valor en 20 s. La orientación correcta del reloj importa para el modelo |
 | **"Tu rumbo" (inicio)** | Saludo según la hora, semana como camino de 7 pasos, anillo de meta semanal, tarjeta de la sesión de hoy con miniaturas de video, estado del reloj | El paciente ve hacia dónde va, no solo una lista |
 | **Sesión en curso** | Anillo de progreso alrededor del contador, animación en cada repetición, sonido suave por repetición, video del ejercicio en bucle, transición clara entre ejercicios | Es la pantalla del día a día y del Demo Day |
 | **Descanso** | Círculo que se expande y contrae para guiar la respiración, cuenta regresiva, adelanto del siguiente ejercicio con su video | Convierte la espera en algo tranquilo |
@@ -124,7 +124,7 @@ Los sonidos deben ser propios o con licencia libre para uso comercial, cortos (<
 | # | Tarea | Éxito si… |
 |---|---|---|
 | 1 | "Su fisioterapeuta le dio este código. Entre a la app." | Entra sin ayuda en menos de 1 min |
-| 2 | "Conecte su reloj y póngaselo." | Lo conecta y lo coloca con la flecha hacia los dedos |
+| 2 | "Conecte su reloj y póngaselo." | Lo conecta y lo coloca con la flecha hacia el pulgar |
 | 3 | "Haga su sesión de hoy." (sesión corta) | La completa sin tocar el teléfono durante las series |
 | 4 | "Dígale a su fisio cuánto le dolió." | Marca el dolor y envía |
 | 5 | "¿Cuántas sesiones le faltan esta semana?" | Lo encuentra en el inicio en menos de 20 s |
@@ -138,7 +138,7 @@ Los sonidos deben ser propios o con licencia libre para uso comercial, cortos (<
 
 ## 9. Plan día por día
 
-| Día | Claude | Moisés |
+| Día | Desarrollo | Validación y contenido |
 |---|---|---|
 | **Día 1** | 3 direcciones de marca; renombre completo (doc 08 §6); sistema visual en la app (colores, tipografía, componentes, tiempos de animación); ícono y splash; meta semanal en backend y app | Elegir la dirección de marca y decidir "tú" o "usted". **Grabar los 7 videos** (doc 10) y que el fisio los valide |
 | **Día 2** | Sesión completa: anillo, animaciones, sonidos, videos integrados y en espejo, descanso con respiración, celebraciones, resumen con la escala de dolor nueva | Probar en el A36 lo que vaya quedando y reportar lo que no guste |

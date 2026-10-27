@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .config import CHANNELS, MIRROR_AXIS, N_CLASSES, SMOOTHING_VOTES, STEP_INFERENCE, WINDOW
+from .config import CHANNELS, CLASS_MERGE, MIRROR_AXIS, N_CLASSES, SMOOTHING_VOTES, STEP_INFERENCE, WINDOW
 from .pipeline import TrainedCnn
 from .preprocess import mirror_signs
 from .windows import Windows
@@ -96,6 +96,8 @@ def model_config_h(version: int, trained: TrainedCnn, m: Int8Model) -> str:
 
 // Orden de canales: {", ".join(CHANNELS)} (g y dps)
 static const float MODEL_MIRROR_SIGNS[6] = {_floats(mirror_signs())};   // se aplica si el brazo es el izquierdo
+// Clase del modelo para cada exercise_id (ejercicios indistinguibles comparten clase: config.CLASS_MERGE).
+static const unsigned char MODEL_CLASS_OF[{N_CLASSES}] = {{{", ".join(str(CLASS_MERGE.get(i, i)) for i in range(N_CLASSES))}}};
 static const float MODEL_MEAN[6] = {_floats(trained.normalizer.mean)};
 static const float MODEL_STD[6]  = {_floats(trained.normalizer.std)};
 

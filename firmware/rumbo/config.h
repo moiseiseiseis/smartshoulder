@@ -3,8 +3,8 @@
 #pragma once
 #include <stdint.h>
 
-#define FW_VERSION        2   // 1.1 en los docs: inferencia provisional sin modelo
-#define MODEL_VERSION     0   // 0 = sin modelo (solo captura)
+#define FW_VERSION        3   // 2.0 en los docs: clasificador TinyML (FW_VERSION 2 = 1.1, sin modelo)
+#define MODEL_VERSION     1   // debe coincidir con MODEL_VERSION_EXPORTED de model_config.h
 
 // ---------- IMU ----------
 // Mismos rangos en captura e inferencia: si cambian, hay que reentrenar.
@@ -35,6 +35,7 @@ enum Cmd : uint8_t {
   CMD_SET_EXPECTED  = 0x05,
   CMD_SYNC_EVENTS   = 0x06,
   CMD_IDENTIFY      = 0x07,
+  CMD_POWER_OFF     = 0x08,
 };
 
 // ---------- Eventos ----------
@@ -49,3 +50,6 @@ enum Arm      : uint8_t { ARM_RIGHT = 0, ARM_LEFT = 1 };
 
 // ---------- Energía ----------
 #define LOW_BATTERY_PCT   15
+// Apagado (System OFF, ~µA). Se enciende al conectar el USB-C o con el botón de reset.
+#define IDLE_POWER_OFF_MS (15UL * 60UL * 1000UL)   // sin conexión ni sesión durante 15 min
+#define CRITICAL_VBAT     3.35f                    // protege la LiPo: se apaga antes de vaciarla

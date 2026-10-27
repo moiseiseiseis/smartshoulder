@@ -16,7 +16,7 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
 from .config import STEP_TRAIN, TARGET_COUNT_WITHIN_1, TARGET_F1_MACRO, TARGET_NULO_FALSE_POSITIVE
 from .data import dataset_hash, load_dataset
-from .pipeline import evaluate_counter, fit_cnn, loso
+from .pipeline import evaluate_counter, fit_cnn, holdout, loso
 from .windows import windows_from
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +29,7 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--folds", type=int, default=None, help="limitar LOSO a N sujetos (pruebas rápidas)")
     ap.add_argument("--skip-loso", action="store_true")
+    ap.add_argument("--holdout", choices=["arm", "speed"], default="arm", help="validación si hay un solo sujeto")
     ap.add_argument("--export", type=int, metavar="VERSION", help="entrenar con todos los sujetos y exportar model_vN")
     ap.add_argument("--to-firmware", action="store_true", help="copiar model_data.h y model_config.h al firmware")
     a = ap.parse_args()
@@ -40,12 +41,17 @@ def main() -> None:
     metrics: dict = {}
     if not a.skip_loso:
         t = time.time()
-        res = loso(recs, a.model, a.epochs, a.folds)
+        if len(subjects) >= 2:
+            res = loso(recs, a.model, a.epochs, a.folds)
+        else:
+            print(f"Un solo sujeto: sin LOSO; validación {a.holdout} (optimista, misma persona)")
+            res = holdout(recs, a.holdout, a.model, a.epochs)
         print(res.report())
         print(f"  ({time.time() - t:.0f} s)")
         ok = res.f1_macro >= TARGET_F1_MACRO and res.nulo_false_positive < TARGET_NULO_FALSE_POSITIVE
         print(f"  Meta Demo Day: F1 ≥ {TARGET_F1_MACRO} y NULO < {TARGET_NULO_FALSE_POSITIVE:.0%} → {'CUMPLE' if ok else 'NO CUMPLE'}")
         metrics = {
+            "validation": res.kind,
             "loso_f1_macro": round(res.f1_macro, 4),
             "loso_accuracy": round(res.accuracy, 4),
             "loso_nulo_false_positive": round(res.nulo_false_positive, 4),

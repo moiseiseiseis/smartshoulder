@@ -13,7 +13,7 @@ import time
 
 import numpy as np
 
-from .config import GYRO_SCALE_DPS
+from .config import ACCEL_SCALE_G, GYRO_SCALE_DPS
 from .repcounter import RepCounter
 
 REP_RE = re.compile(r"# REP (\d+) @(\d+)")
@@ -58,13 +58,12 @@ def capture(port: str, seconds: float, expect: int) -> tuple[list[tuple[int, lis
 def python_reps(samples: list[tuple[int, list[int]]], start: int = 0) -> list[int]:
     """Mismas operaciones que el firmware: float32(crudo) × 0.0175f, desde la misma muestra que él."""
     rc = RepCounter()
-    scale = np.float32(GYRO_SCALE_DPS)
+    scale = np.array([ACCEL_SCALE_G] * 3 + [GYRO_SCALE_DPS] * 3, np.float32)
     out = []
     for idx, raw in samples:
         if idx < start:
             continue
-        g = np.array(raw[3:], np.float32) * scale
-        if rc.update(g):
+        if rc.update(np.array(raw, np.float32) * scale):
             out.append(idx)
     return out
 

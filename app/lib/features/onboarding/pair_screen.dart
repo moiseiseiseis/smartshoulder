@@ -39,7 +39,7 @@ class PairScreen extends ConsumerWidget {
           RumboCard(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               _Step(1, 'En la muñeca del brazo $arm, el que está en rehabilitación.'),
-              const _Step(2, 'La flecha del reloj apunta hacia los dedos.', icon: LucideIcons.arrowRight),
+              const _Step(2, 'La flecha del reloj apunta hacia su pulgar.', icon: LucideIcons.arrowUp),
               const _Step(3, 'Un poco arriba del hueso de la muñeca, ajustado sin apretar.'),
             ]),
           ),
@@ -108,7 +108,7 @@ class _Placement extends StatelessWidget {
             return const ExerciseVideo(exerciseId: 7, mirror: false, fallbackTitle: 'Cómo ponerse el reloj');
           }
           return Semantics(
-            label: 'Ilustración: reloj en la muñeca con la flecha hacia los dedos',
+            label: 'Ilustración: reloj en la muñeca con la flecha hacia el pulgar',
             child: ClipRRect(
               borderRadius: BorderRadius.circular(RumboRadius.lg),
               child: AspectRatio(aspectRatio: 16 / 9, child: CustomPaint(painter: _WristPainter())),
@@ -118,6 +118,8 @@ class _Placement extends StatelessWidget {
       );
 }
 
+/// Vista desde arriba de la muñeca derecha, palma hacia abajo, dedos a la derecha: el pulgar queda arriba.
+/// La flecha del reloj (y el conector USB-C) apuntan hacia el pulgar (regla de colocación, contexto/11).
 class _WristPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -125,36 +127,36 @@ class _WristPainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, Paint()..color = RumboColors.primarySoft);
     final skin = Paint()..color = const Color(0xFFE9C7A8);
     // Antebrazo (izquierda) y mano (derecha).
-    canvas.drawRRect(RRect.fromLTRBR(-20, h * 0.36, w * 0.66, h * 0.64, Radius.circular(h * 0.14)), skin);
-    canvas.drawRRect(RRect.fromLTRBR(w * 0.6, h * 0.30, w * 0.86, h * 0.70, Radius.circular(h * 0.16)), skin);
+    canvas.drawRRect(RRect.fromLTRBR(-20, h * 0.42, w * 0.66, h * 0.70, Radius.circular(h * 0.14)), skin);
+    canvas.drawRRect(RRect.fromLTRBR(w * 0.6, h * 0.38, w * 0.84, h * 0.76, Radius.circular(h * 0.16)), skin);
     for (var i = 0; i < 4; i++) {
-      final y = h * (0.33 + i * 0.09);
-      canvas.drawRRect(RRect.fromLTRBR(w * 0.8, y, w * 0.95, y + h * 0.07, Radius.circular(h * 0.035)), skin);
+      final y = h * (0.42 + i * 0.085);
+      canvas.drawRRect(RRect.fromLTRBR(w * 0.79, y, w * 0.95, y + h * 0.065, Radius.circular(h * 0.033)), skin);
     }
-    // Correa y reloj (sin pantalla: es la carcasa de Rumbo).
-    final strap = Paint()..color = RumboColors.primaryInk;
-    canvas.drawRRect(RRect.fromLTRBR(w * 0.4, h * 0.3, w * 0.48, h * 0.7, const Radius.circular(6)), strap);
-    final body = RRect.fromLTRBR(w * 0.35, h * 0.34, w * 0.53, h * 0.66, const Radius.circular(14));
-    canvas.drawRRect(body, Paint()..color = RumboColors.primary);
-    // Flecha ▲ hacia los dedos (a la derecha).
-    final cx = w * 0.44, cy = h * 0.5, a = h * 0.07;
+    // Pulgar (arriba de la mano).
+    final thumb = Path()
+      ..moveTo(w * 0.64, h * 0.44)
+      ..quadraticBezierTo(w * 0.70, h * 0.16, w * 0.78, h * 0.20)
+      ..quadraticBezierTo(w * 0.80, h * 0.30, w * 0.72, h * 0.44)
+      ..close();
+    canvas.drawPath(thumb, skin);
+    // Correa y reloj.
+    canvas.drawRRect(RRect.fromLTRBR(w * 0.4, h * 0.36, w * 0.48, h * 0.76, const Radius.circular(6)), Paint()..color = RumboColors.primaryInk);
+    canvas.drawRRect(RRect.fromLTRBR(w * 0.35, h * 0.40, w * 0.53, h * 0.72, const Radius.circular(14)), Paint()..color = RumboColors.primary);
+    // Flecha ▲ hacia el pulgar (arriba).
+    final cx = w * 0.44, cy = h * 0.56, a = h * 0.08;
     final arrow = Path()
-      ..moveTo(cx + a, cy)
-      ..lineTo(cx - a * 0.6, cy - a)
-      ..lineTo(cx - a * 0.6, cy + a)
+      ..moveTo(cx, cy - a)
+      ..lineTo(cx - a * 0.9, cy + a * 0.6)
+      ..lineTo(cx + a * 0.9, cy + a * 0.6)
       ..close();
     canvas.drawPath(arrow, Paint()..color = RumboColors.accent);
-    // Indicación punteada hacia los dedos.
+    // Indicación punteada del reloj hacia el pulgar.
     final dot = Paint()..color = RumboColors.accentDeep;
-    for (var x = w * 0.56; x < w * 0.78; x += 12) {
-      canvas.drawCircle(Offset(x, h * 0.18), 2.4, dot);
+    final from = Offset(w * 0.47, h * 0.33), to = Offset(w * 0.66, h * 0.16);
+    for (var t = 0.0; t <= 1.0; t += 0.12) {
+      canvas.drawCircle(Offset.lerp(from, to, t)!, 2.4, dot);
     }
-    final tip = Path()
-      ..moveTo(w * 0.8, h * 0.18)
-      ..lineTo(w * 0.77, h * 0.14)
-      ..lineTo(w * 0.77, h * 0.22)
-      ..close();
-    canvas.drawPath(tip, dot);
   }
 
   @override

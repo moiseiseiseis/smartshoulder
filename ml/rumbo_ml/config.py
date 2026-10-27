@@ -28,8 +28,14 @@ CLASSES = {
 }
 N_CLASSES = len(CLASSES)
 
-# Espejado izquierda → derecha (contexto/03 §3.2): se fija EMPÍRICAMENTE el primer día de captura
-# con preprocess.estimate_mirror_axis(). Valor provisional: eje Y del dispositivo.
+# Ejercicios que el reloj no puede distinguir y comparten clase en el modelo. Rotación externa e interna
+# recorren el mismo arco sobre el eje vertical (solo cambia el lado de la banda): la gravedad se ve igual y
+# con S01 se confundían ~35 %. El modelo verifica "rotación"; cuál de las dos lo dice la app (SET_EXPECTED).
+CLASS_MERGE = {4: 3}
+
+# Espejado izquierda → derecha (contexto/03 §3.2). CONFIRMADO el 18 oct 2026 con S01 (mismo ejercicio con
+# cada brazo, preprocess.estimate_mirror_axis): eje Y. Distancias rot. externa x 2.69 / y 0.66 / z 3.02;
+# flexión x 3.17 / y 0.46 / z 2.79; brazo colgando: gravedad y −0.94 (derecho) vs +0.93 (izquierdo).
 # Reflejar a través de un plano invierte la componente del acelerómetro perpendicular al plano
 # y las dos componentes del giroscopio paralelas a él (la velocidad angular es un pseudovector).
 MIRROR_AXIS = "y"

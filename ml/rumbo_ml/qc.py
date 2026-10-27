@@ -24,15 +24,45 @@ ROOT = Path(__file__).resolve().parents[2]
 SPEEDS = ("normal", "lenta", "rapida")
 
 
+ORIENTATION_MAX_DEG = 25   # diferencia con la referencia a partir de la cual se sospecha un reloj girado
+
+
+def hanging_gravity(rec: Recording) -> np.ndarray | None:
+    """Dirección de la gravedad en los 5 s de brazo colgando con que empieza cada grabación (contexto/11 §3).
+
+    Busca el tramo de 2 s más quieto dentro de los primeros 10 s. None si no hubo un tramo quieto.
+    Se usa la señal ya espejada, para que derecho e izquierdo sean comparables.
+    """
+    x = mirror(rec.x, rec.arm)[: 10 * 50]
+    w = 100
+    if len(x) < w:
+        return None
+    best = min(range(0, len(x) - w + 1, 10), key=lambda i: float(x[i : i + w, 3:].std(axis=0).sum()))
+    seg = x[best : best + w]
+    if seg[:, 3:].std(axis=0).max() > 8:   # °/s: no estuvo quieto
+        return None
+    g = seg[:, :3].mean(axis=0)
+    return g / np.linalg.norm(g)
+
+
+def angle_deg(a: np.ndarray, b: np.ndarray) -> float:
+    return float(np.degrees(np.arccos(np.clip(np.dot(a, b), -1, 1))))
+
+
 def check(rec: Recording) -> list[str]:
     """Problemas encontrados (vacío = todo bien) + resumen impreso."""
     issues: list[str] = []
+    g = hanging_gravity(rec)
     dt = np.diff(rec.t_ms)
     lost = int(((dt[dt > SAMPLE_MS] // SAMPLE_MS) - 1).sum()) if len(dt) else 0
     sat_acc = float((np.abs(rec.x[:, :3]) > ACCEL_RANGE_G * 0.98).mean())
     sat_gyr = float((np.abs(rec.x[:, 3:]) > GYRO_RANGE_DPS * 0.98).mean())
     print(f"\n{rec.name}: {rec.duration_s / 60:.1f} min · {len(rec.t_ms)} muestras · perdidas {lost} · "
           f"saturación acc {sat_acc:.2%} giro {sat_gyr:.2%} · {len(rec.sets)} series")
+    if g is None:
+        issues.append("no empezó con 5 s de brazo colgando quieto (sirve para verificar la orientación del reloj)")
+    else:
+        print(f"  Gravedad con el brazo colgando (x, y, z): {np.round(g, 2)}")
     if lost > len(rec.t_ms) * 0.005:
         issues.append(f"{lost} muestras perdidas (> 0.5 %)")
     if sat_acc > 0.001 or sat_gyr > 0.001:
@@ -111,8 +141,26 @@ def main() -> None:
     a = ap.parse_args()
     recs = [load_recording(p) for p in sorted((a.data / "raw").glob(f"{a.subject}_*.csv"))] if a.subject else load_dataset(a.data)
     total = 0
+    gravities = {r.name: hanging_gravity(r) for r in recs}
+    valid = [v for v in gravities.values() if v is not None]
+    ref = None
+    if len(valid) >= 2:
+        ref = np.median(np.array(valid), axis=0)
+        ref /= np.linalg.norm(ref)
+    elif a.subject:
+        all_recs = load_dataset(a.data)   # comparar contra todo el dataset aunque se revise un solo sujeto
+        others = [v for v in (hanging_gravity(r) for r in all_recs) if v is not None]
+        if len(others) >= 2:
+            ref = np.median(np.array(others), axis=0)
+            ref /= np.linalg.norm(ref)
     for r in recs:
         issues = check(r)
+        g = gravities[r.name]
+        if ref is not None and g is not None:
+            d = angle_deg(g, ref)
+            print(f"  Orientación: {d:.0f}° respecto a la referencia del dataset")
+            if d > ORIENTATION_MAX_DEG:
+                issues.append(f"el reloj parece girado {d:.0f}° respecto a los demás participantes: revisar la flecha ▲ hacia el pulgar (USB-C del lado del pulgar)")
         total += len(issues)
         print("  ✓ Sin problemas" if not issues else "  Revisar:\n    - " + "\n    - ".join(issues))
         if a.plots:

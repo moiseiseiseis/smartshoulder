@@ -106,3 +106,23 @@ def test_parity_with_real_xiao_capture():
     samples = [(int(r[0]), r[1:].tolist()) for r in d]
     firmware = [284, 372, 578, 724, 995, 1093, 1190, 1371, 1505, 1678, 1816, 1996, 2419, 2634, 2737, 2804]
     assert python_reps(samples, start=6) == firmware
+
+
+# ---------------------------------------------------------------- orientación (control de calidad)
+def test_hanging_gravity_and_rotated_watch():
+    from rumbo_ml.qc import angle_deg, hanging_gravity
+
+    t = np.arange(600) * 20
+    still = np.tile([0.0, -1.0, 0.0, 0.0, 0.0, 0.0], (600, 1)).astype(np.float32)   # brazo colgando: gravedad en -y
+    still[:, 3:] += np.random.default_rng(0).normal(0, 1, (600, 3))
+    g = hanging_gravity(Recording("S01_R_x", "S01", "R", t, still, []))
+    assert g is not None and angle_deg(g, np.array([0, -1, 0])) < 3
+
+    rotated = still.copy()
+    rotated[:, :3] = [0.0, 0.0, -1.0]                                               # reloj girado 90°
+    g2 = hanging_gravity(Recording("S02_R_x", "S02", "R", t, rotated, []))
+    assert angle_deg(g, g2) > 80
+
+    moving = still.copy()
+    moving[:, 4] += 60 * np.sin(np.arange(600) / 5)                                  # nunca estuvo quieto
+    assert hanging_gravity(Recording("S03_R_x", "S03", "R", t, moving, [])) is None

@@ -1,7 +1,9 @@
 // Rumbo Rehab — firmware para Seeed XIAO nRF52840 Sense (core "Seeed nRF52 mbed-enabled Boards").
 // Versión 1: modo captura (dataset) por BLE y por USB serial.
 // Versión 1.1: modo inferencia PROVISIONAL: cuenta repeticiones por señal (repcounter) sin clasificador;
-//              la repetición se atribuye al ejercicio que la app indica con SET_EXPECTED. El modelo llega en la v2.
+//              la repetición se atribuye al ejercicio que la app indica con SET_EXPECTED.
+// Versión 2:   clasificador TinyML (classifier.cpp). Una repetición del contador solo cuenta si, mientras se hacía,
+//              el modelo reconoció el ejercicio esperado (contexto/01 §5: el reloj verifica, la app no procesa señal).
 // Contrato: contracts/ble.md
 
 #include <Arduino.h>
@@ -11,6 +13,8 @@
 #include "power.h"
 #include "leds.h"
 #include "repcounter.h"
+#include "classifier.h"
+#include "model_config.h"
 
 // ---------- Estado ----------
 static DevMode mode = MODE_CAPTURE;
@@ -31,6 +35,11 @@ static uint8_t rawBatch = RAW_BATCH_MIN;
 
 // ---------- Inferencia (eventos) ----------
 static RepCounter repCounter;
+static Classifier classifier;
+static bool modelOk = false;
+static uint8_t repVotes[MODEL_N_CLASSES];      // predicciones del modelo desde la repetición anterior
+static float repProbSum = 0;                   // suma de la probabilidad de la clase esperada en esas ventanas
+static uint8_t repWindows = 0;
 static uint8_t expectedExercise = 0;
 static uint16_t repInSet = 0;
 static uint16_t eventSeq = 0;
@@ -59,6 +68,24 @@ static void processSync() {
   syncFrom = -1;
 }
 
+// ---------- Verificación de repeticiones ----------
+static void clearRepVotes() {
+  memset(repVotes, 0, sizeof(repVotes));
+  repProbSum = 0;
+  repWindows = 0;
+}
+
+// ¿La repetición que acaba de detectar el contador es del ejercicio esperado?
+// Sí, si el modelo vio la clase esperada al menos una vez y ninguna otra clase de ejercicio la superó.
+// (NULO no compite: una ventana que cae a medias entre repeticiones suele salir NULO.)
+static bool repMatchesExpected(uint8_t &confidence) {
+  uint8_t target = MODEL_CLASS_OF[expectedExercise];
+  uint8_t other = 0;
+  for (int k = 1; k < MODEL_N_CLASSES; k++) if (k != target && repVotes[k] > other) other = repVotes[k];
+  confidence = repWindows ? (uint8_t)constrain(lroundf(255.0f * repProbSum / repWindows), 0L, 255L) : 0;
+  return repVotes[target] > 0 && repVotes[target] >= other;
+}
+
 // ---------- Sesión ----------
 static void startSession(bool fromSerial, uint8_t requestedBatch) {
   if (!imuOk) { Serial.println("# ERROR: IMU no inicializado"); return; }
@@ -74,6 +101,8 @@ static void startSession(bool fromSerial, uint8_t requestedBatch) {
   expectedExercise = 0;
   repInSet = 0;
   repCounter.reset();
+  classifier.reset();
+  clearRepVotes();
   Serial.print("# START mode="); Serial.print(mode == MODE_CAPTURE ? "capture" : "inference");
   Serial.print(" arm="); Serial.print(arm == ARM_RIGHT ? "R" : "L");
   Serial.print(" batch="); Serial.println(rawBatch);
@@ -87,6 +116,14 @@ static void stopSession() {
   Serial.print(" late="); Serial.println(lateSamples);
 }
 
+// Apagado: avisa con tres destellos rojos y entra en System OFF.
+static void shutdown(const char *why) {
+  if (sessionActive) stopSession();
+  Serial.print("# Apagando: "); Serial.println(why);
+  for (int i = 0; i < 3; i++) { ledSet(COLOR_RED); delay(150); ledSet(COLOR_OFF); delay(150); }
+  powerOff();
+}
+
 // Comandos binarios de CONTROL (BLE). La consola serial los traduce a este mismo formato.
 static void handleCommand(const uint8_t *d, int len, bool fromSerial) {
   switch (d[0]) {
@@ -98,13 +135,15 @@ static void handleCommand(const uint8_t *d, int len, bool fromSerial) {
       if (len >= 2) {
         expectedExercise = d[1];
         repInSet = 0;
-        repCounter.reset();
+        repCounter.configure(expectedExercise);   // umbrales y señal de ese ejercicio
+        clearRepVotes();
         if (sessionActive && expectedExercise) emitEvent(EVT_EXERCISE_CHANGED, expectedExercise, 0, 0);
         Serial.print("# EXPECTED "); Serial.print(expectedExercise); Serial.print(" @"); Serial.println(sampleIndex);
       }
       break;
     case CMD_SYNC_EVENTS:   if (len >= 3) syncFrom = d[1] | (d[2] << 8); break;
     case CMD_IDENTIFY:      ledIdentify(); break;
+    case CMD_POWER_OFF:     shutdown("comando"); break;
     default:
       Serial.print("# comando desconocido 0x"); Serial.println(d[0], HEX);
   }
@@ -135,6 +174,7 @@ static void handleSerialLine(String line) {
   else if (line == "arm R")          { cmd[0] = CMD_SET_ARM; cmd[1] = ARM_RIGHT; handleCommand(cmd, 2, true); }
   else if (line == "arm L")          { cmd[0] = CMD_SET_ARM; cmd[1] = ARM_LEFT; handleCommand(cmd, 2, true); }
   else if (line.startsWith("expect ")) { cmd[0] = CMD_SET_EXPECTED; cmd[1] = (uint8_t)line.substring(7).toInt(); handleCommand(cmd, 2, true); }
+  else if (line == "off")            { cmd[0] = CMD_POWER_OFF; handleCommand(cmd, 1, true); }
   else if (line == "identify")       { cmd[0] = CMD_IDENTIFY; handleCommand(cmd, 1, true); }
   else if (line == "status")         { printStatus(); }
   else if (line.length() > 0)        { Serial.print("# ? "); Serial.println(line); }
@@ -166,6 +206,34 @@ static void emitCaptureSample(const ImuSample &s, uint32_t index) {
   }
 }
 
+static void inferenceTick(const ImuSample &s) {
+  if (modelOk && classifier.push(s, arm == ARM_LEFT)) {
+    if (repWindows < 255) {
+      repVotes[classifier.lastClass]++;
+      repProbSum += classifier.probs[MODEL_CLASS_OF[expectedExercise]];
+      repWindows++;
+    }
+    if (sessionFromSerial) {
+      Serial.print("# CLS "); Serial.print(classifier.lastClass);
+      Serial.print(" p="); Serial.print(classifier.probs[classifier.lastClass], 2);
+      Serial.print(" us="); Serial.print(classifier.lastInferenceUs);
+      Serial.print(" @"); Serial.println(sampleIndex);
+    }
+  }
+  if (!expectedExercise || !repCounter.update(s)) return;
+  uint8_t confidence = 0;
+  bool ok = !modelOk || repMatchesExpected(confidence);   // sin modelo: comportamiento de la v1.1
+  clearRepVotes();
+  if (!ok) {
+    Serial.print("# REP rechazada (no es el ejercicio esperado) @"); Serial.println(sampleIndex);
+    return;
+  }
+  repInSet++;
+  emitEvent(EVT_REP, expectedExercise, repInSet, confidence);
+  Serial.print("# REP "); Serial.print(repInSet); Serial.print(" conf="); Serial.print(confidence);
+  Serial.print(" @"); Serial.println(sampleIndex);
+}
+
 static void sampleTick() {
   long behind = (long)(micros() - nextSampleUs);
   if (behind < 0) return;
@@ -190,11 +258,7 @@ static void sampleTick() {
     snprintf(line, sizeof(line), "D,%lu,%d,%d,%d,%d,%d,%d", (unsigned long)sampleIndex, s.v[0], s.v[1], s.v[2], s.v[3], s.v[4], s.v[5]);
     Serial.println(line);
   }
-  if (mode == MODE_INFERENCE && expectedExercise && repCounter.update(s)) {
-    repInSet++;
-    emitEvent(EVT_REP, expectedExercise, repInSet, 0);   // confianza 0 = sin clasificador (MODEL_VERSION 0)
-    Serial.print("# REP "); Serial.print(repInSet); Serial.print(" @"); Serial.println(sampleIndex);
-  }
+  if (mode == MODE_INFERENCE) inferenceTick(s);
   sampleIndex++;
 }
 
@@ -204,6 +268,7 @@ void setup() {
   ledsBegin();
   powerBegin();
   imuOk = imuBegin();
+  modelOk = classifier.begin();
   if (!bleBegin(onBleCommand)) {
     while (true) { ledSet(COLOR_RED); delay(200); ledSet(COLOR_OFF); delay(200); }
   }
@@ -214,6 +279,7 @@ void setup() {
 void loop() {
   static bool wasConnected = false;
   static unsigned long lastHousekeeping = 0;
+  static unsigned long lastActivity = 0;
 
   blePoll();
   pollSerial();
@@ -229,10 +295,15 @@ void loop() {
   if (sessionActive) sampleTick();
   processSync();
 
+  // Apagado automático: sin conexión ni sesión por 15 min (salvo con el USB conectado, cargando o en desarrollo).
+  if (connected || sessionActive || usbPowered()) lastActivity = millis();
+  if (millis() - lastActivity > IDLE_POWER_OFF_MS) shutdown("15 min sin uso");
+
   if (millis() - lastHousekeeping > 1000) {
     lastHousekeeping = millis();
     uint8_t pct = batteryPercent();
     lowBattery = batteryPresent() && pct < LOW_BATTERY_PCT;
+    if (batteryPresent() && !usbPowered() && batteryVolts() < CRITICAL_VBAT) shutdown("batería crítica");
     bleSetBattery(pct);
     uint8_t state = sessionActive ? STATE_SESSION : (lowBattery ? STATE_LOW_BATTERY : STATE_IDLE);
     bleSetStatus(state, mode, arm, rawBatch);

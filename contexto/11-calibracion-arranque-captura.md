@@ -7,13 +7,17 @@
 
 ---
 
+## 0. Regla de colocación del reloj
+
+En las dos muñecas: **flecha ▲ hacia el pulgar**, con el **conector USB-C del lado del pulgar** (regla fijada el 18 oct 2026, igual en ambos brazos). Ajustado sin apretar, 1–2 cm arriba del hueso de la muñeca. **Todos los participantes y pacientes igual**; si alguien lo pone al revés, la señal queda girada 180° y el control de calidad lo marca.
+
 ## 1. Qué significa "calibrar" en este proyecto
 
 | Qué | ¿Antes de capturar? | Cuándo y cómo |
 |---|---|---|
 | **Umbrales del contador de repeticiones** | **No** | Se calibran **con** los datos capturados. La herramienta de captura guarda la señal cruda, así que la captura no depende de ningún umbral. El control de calidad (`python -m rumbo_ml.qc`) y la evaluación del contador (`train`) muestran cuánto acierta y permiten ajustarlo. |
-| **Eje de espejado** (brazo izquierdo ↔ derecho) | **Al inicio de la captura** | En la primera sesión, grabar un mismo ejercicio con cada brazo (~10 min). Con eso se fija el eje (`preprocess.estimate_mirror_axis`). Hoy es provisional (eje Y). |
-| **Orientación de la placa en la carcasa** | **Sí, pero es solo verificarla** | Lo único crítico: la XIAO debe ir **siempre en la misma posición** dentro de la carcasa y la carcasa siempre igual en la muñeca (flecha ▲ hacia los dedos). Con la carcasa nueva se comprueba en 2 minutos. |
+| **Eje de espejado** (brazo izquierdo ↔ derecho) | ✅ **Hecho (18 oct)** | **Eje Y**, confirmado con S01 (protocolo completo con cada brazo): rotación externa y flexión eligen Y con margen amplio, y la gravedad con el brazo colgando es espejo exacto (y −0.94 vs +0.93). |
+| **Orientación de la placa en la carcasa** | **Sí, pero es solo verificarla** | Lo único crítico: la XIAO debe ir **siempre en la misma posición** dentro de la carcasa y la carcasa siempre igual en la muñeca (flecha ▲ hacia el pulgar, USB-C del lado del pulgar). Con la carcasa nueva se comprueba en 2 minutos. |
 | **Sesgo del giroscopio** (~5 °/s medido el 6 oct) | **No** | La normalización del modelo lo absorbe. |
 | **Medidor de batería** | **No** | Con la LiPo soldada: una medición con multímetro y se ajusta `VBAT_CAL` en `firmware/rumbo/power.cpp` (5 min). |
 

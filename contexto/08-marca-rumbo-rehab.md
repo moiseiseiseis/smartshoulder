@@ -40,7 +40,7 @@ Manual de marca completo, papelería, empaque del reloj, ilustraciones propias, 
 
 ## 3. Cómo producirlo
 
-1. Claude prepara **3 direcciones de marca** en una página (logo, isotipo, paleta, tipografía, ícono en un celular y la pantalla de sesión aplicada).
+1. Se preparan **3 direcciones de marca** en una página (logo, isotipo, paleta, tipografía, ícono en un celular y la pantalla de sesión aplicada).
 2. Moisés elige una (o mezcla) el mismo día.
 3. Se aplica en app, web, presentación y carcasa.
 

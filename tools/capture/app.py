@@ -27,6 +27,7 @@ SPEEDS = [("normal", "Normal"), ("lenta", "Lenta"), ("rapida", "Rápida")]
 NULO_SPEED = "natural"
 PLOT_SECONDS = 10
 PLOT_POINTS = PLOT_SECONDS * 50
+MIN_SET_SECONDS = 5      # 10 repeticiones nunca duran menos: evita cerrar una serie por un toque doble
 
 
 class CaptureApp:
@@ -51,6 +52,11 @@ class CaptureApp:
         root.geometry("1400x860")
         self._build_ui()
         root.bind("<space>", self._on_space)
+        # En Windows/Tk la barra espaciadora también "presiona" el botón que tiene el foco:
+        # eso hacía que una sola pulsación iniciara y terminara la serie, o detuviera la grabación.
+        for cls in ("TButton", "TRadiobutton", "TCheckbutton"):
+            root.bind_class(cls, "<Key-space>", self._on_space)
+        self._no_focus(root)
         root.bind("<KeyPress-r>", self._on_rep)
         root.bind("<KeyPress-R>", self._on_rep)
         root.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -86,6 +92,8 @@ class CaptureApp:
         self.btn_connect.grid(row=2, column=0, sticky="we")
         self.btn_identify = ttk.Button(f, text="Identificar (LED)", command=lambda: self.source and self.source.identify())
         self.btn_identify.grid(row=2, column=1, columnspan=2, sticky="we")
+        self.btn_off = ttk.Button(f, text="Apagar reloj", command=self._on_power_off)
+        self.btn_off.grid(row=4, column=0, columnspan=3, sticky="we", pady=(4, 0))
         self.device_info = ttk.Label(f, text="Sin conexión", foreground="#666")
         self.device_info.grid(row=3, column=0, columnspan=3, sticky="w")
 
@@ -134,6 +142,8 @@ class CaptureApp:
         self.set_label.pack(fill="x")
         self.btn_set = ttk.Button(f, text="", style="Big.TButton", command=self._toggle_set)
         self.btn_set.pack(fill="x", pady=4)
+        ttk.Label(f, text="ESPACIO una vez al empezar la serie y otra vez al terminar las 10 repeticiones.",
+                  foreground="#666", wraplength=330).pack(fill="x")
         self.btn_rep = ttk.Button(f, text="R · Marcar repetición", command=self._mark_rep)
         self.btn_rep.pack(fill="x")
         row = ttk.Frame(f)
@@ -167,6 +177,13 @@ class CaptureApp:
         self.log_box = tk.Text(right, height=9, font=("Consolas", 9), state="disabled")
         self.log_box.pack(fill="x")
 
+    def _no_focus(self, widget):
+        """Los botones no se quedan con el foco: el teclado es solo para ESPACIO y R."""
+        for w in widget.winfo_children():
+            if isinstance(w, (ttk.Button, ttk.Radiobutton)):
+                w.configure(takefocus=False)
+            self._no_focus(w)
+
     # ================= Acciones =================
     def _on_transport(self):
         self.device_combo.set("")
@@ -195,14 +212,36 @@ class CaptureApp:
         self.source = self.serial if self.transport_var.get() == "serial" else self.ble
         self.source.connect(target)
 
+    def _on_power_off(self):
+        if not self.connected:
+            messagebox.showinfo("Apagar reloj", "Conecta el reloj primero.")
+            return
+        if self.recorder.recording:
+            messagebox.showinfo("Apagar reloj", "Termina la grabación antes de apagar el reloj.")
+            return
+        if messagebox.askyesno("Apagar reloj", "¿Apagar el reloj?\n\nPara encenderlo otra vez, conéctalo al cable USB-C "
+                                               "o presiona el botón de reset por el orificio de la carcasa."):
+            self.source.power_off()
+            self.log("Reloj apagado (tres destellos rojos). Para encenderlo: conectar el USB-C.")
+
     def _on_record(self):
         if self.recorder.recording:
+            sid = self.recorder.subject.subject_id if self.recorder.subject else ""
+            if not messagebox.askyesno("Terminar grabación",
+                                       f"¿Terminar la grabación de {sid}?\n\n"
+                                       f"Series guardadas en este archivo: {len(self.recorder.labels)}"):
+                return
             self.source.stop_capture()
             self.recorder.stop()
             self.log(f"Grabación terminada: {self.recorder.total_samples} muestras, "
                      f"{self.recorder.lost_samples} perdidas, {len(self.recorder.labels)} series")
-            self.subj["id"].set(self._next_subject_id())
+            same = messagebox.askyesno("Siguiente grabación",
+                                       f"¿La siguiente grabación es de la MISMA persona ({sid})?\n\n"
+                                       "Sí: conserva el ID (por ejemplo, para grabar lo que faltó o el brazo izquierdo).\n"
+                                       "No: pasa al siguiente participante.")
+            self.subj["id"].set(sid if same else self._next_subject_id())
             self._refresh()
+            self.root.focus_set()
             return
         if not self.connected:
             messagebox.showinfo("Grabación", "Conecta el reloj primero.")
@@ -221,6 +260,7 @@ class CaptureApp:
         self.log(f"Grabando {subject.subject_id} brazo {subject.recorded_arm} → {path}")
         self._select(self._next_pending() or (1, "normal"))
         self._refresh()
+        self.root.focus_set()   # para que ESPACIO no escriba en los campos del participante
 
     def _select(self, key):
         if self.recorder.current:
@@ -232,6 +272,11 @@ class CaptureApp:
         if not self.recorder.recording:
             return
         if self.recorder.current:
+            dur_now = (self.recorder.now_ms - self.recorder.current.start_ms) / 1000
+            if dur_now < MIN_SET_SECONDS:
+                self.log(f"⚠ La serie lleva {dur_now:.1f} s: haga las 10 repeticiones y presione ESPACIO al terminar. "
+                         "(Si se equivocó, use «Cancelar serie».)")
+                return
             done = self.recorder.end_set()
             dur = (done.end_ms - done.start_ms) / 1000
             self.log(f"✓ {c.EXERCISES[done.exercise_id]} · {done.speed} · serie {done.set} · "

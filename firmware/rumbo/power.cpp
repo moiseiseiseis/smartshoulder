@@ -34,3 +34,19 @@ uint8_t batteryPercent() {
   }
   return 100;
 }
+
+bool usbPowered() {
+  return (NRF_POWER->USBREGSTATUS & POWER_USBREGSTATUS_VBUSDETECT_Msk) != 0;
+}
+
+void powerOff() {
+  // Apaga lo que consume y entra en System OFF. El nRF52840 despierta al detectar voltaje en el USB (VBUS)
+  // o con el botón de reset; despertar equivale a reiniciar.
+  digitalWrite(PIN_LSM6DS3TR_C_POWER, LOW);
+  digitalWrite(LEDR, HIGH);
+  digitalWrite(LEDG, HIGH);
+  digitalWrite(LEDB, HIGH);
+  delay(50);
+  NRF_POWER->SYSTEMOFF = 1;
+  while (true) {}
+}

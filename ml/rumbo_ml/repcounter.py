@@ -21,9 +21,26 @@ class RepParams:
     min_rep: int = 40             # 0.8 s
     max_rep: int = 500            # 10 s
     refractory: int = 15          # 0.3 s
+    accel: bool = False           # señal: giroscopio (dps) o acelerómetro sin gravedad (cg = g × 100)
 
 
 FIRMWARE_PARAMS = RepParams()
+BASE_ALPHA = 0.005               # línea base del acelerómetro (~4 s a 50 Hz)
+
+# Umbrales por ejercicio (el reloj sabe cuál toca por SET_EXPECTED). Calibrados con S01 el 20 oct 2026
+# (python -m rumbo_ml.calibrate). La escapular gira poco: se cuenta con el acelerómetro.
+EXERCISE_PARAMS = {
+    1: RepParams(t_high=40.0, t_low=16.0, min_rep=25),               # Flexión anterior
+    2: RepParams(t_high=25.0, t_low=10.0, min_rep=40),               # Abducción
+    3: RepParams(t_high=10.0, t_low=3.0, min_rep=25),                # Rotación externa
+    4: RepParams(t_high=30.0, t_low=18.0, min_rep=25),               # Rotación interna
+    5: RepParams(t_high=40.0, t_low=12.0, min_rep=25),               # Extensión de tríceps
+    6: RepParams(t_high=8.0, t_low=2.4, min_rep=25, accel=True),     # Estabilización escapular
+}
+
+
+def params_for(exercise_id: int) -> RepParams:
+    return EXERCISE_PARAMS.get(exercise_id, FIRMWARE_PARAMS)
 
 IDLE, OUT, BACK = 0, 1, 2
 
@@ -34,6 +51,8 @@ class RepCounter:
         self.reset()
 
     def reset(self) -> None:
+        self.base = np.zeros(3, f32)
+        self.warm = 0
         self.lp = np.zeros(3, f32)
         self.energy = np.zeros(3, f32)
         self.phase = IDLE
@@ -42,10 +61,17 @@ class RepCounter:
         self.samples_in_rep = 0
         self.samples_since_rep = 1000
 
-    def update(self, gyro_dps: np.ndarray) -> bool:
-        """gyro_dps: (3,) en dps. True si con esta muestra se completó una repetición."""
+    def update(self, sample: np.ndarray) -> bool:
+        """sample: (6,) físico (g, dps). True si con esta muestra se completó una repetición."""
         p = self.p
-        g = gyro_dps.astype(f32)
+        if p.accel:
+            # Quita la gravedad con una línea base lenta (~4 s); arranca en la primera muestra.
+            a = sample[:3].astype(f32)
+            self.base = a.copy() if self.warm == 0 else self.base + f32(BASE_ALPHA) * (a - self.base)
+            self.warm = 1
+            g = (a - self.base) * f32(100.0)
+        else:
+            g = sample[3:].astype(f32)
         self.lp = self.lp + f32(p.lp_alpha) * (g - self.lp)
         self.energy = self.energy + f32(p.energy_alpha) * (self.lp * self.lp - self.energy)
         self.samples_since_rep += 1
@@ -82,4 +108,4 @@ class RepCounter:
 def count_reps(x: np.ndarray, params: RepParams = FIRMWARE_PARAMS) -> int:
     """x: (n, 6) físico. Repeticiones contadas en el segmento."""
     rc = RepCounter(params)
-    return sum(rc.update(row[3:]) for row in x)
+    return sum(rc.update(row) for row in x)

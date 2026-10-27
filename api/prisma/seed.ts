@@ -209,7 +209,7 @@ async function main() {
   // Flota: el reloj real (RR-54F5) y relojes demo.
   const devices: Record<string, string> = {};
   for (const [bleName, isDemo] of [['RR-54F5', false], ['RR-D001', true], ['RR-D002', true], ['RR-D003', true], ['RR-D004', true], ['RR-D005', true]] as const) {
-    const d = await prisma.device.create({ data: { clinicId: clinic.id, bleName, isDemo, fwVersion: 1, modelVersion: isDemo ? 1 : 0 } });
+    const d = await prisma.device.create({ data: { clinicId: clinic.id, bleName, isDemo, fwVersion: isDemo ? 1 : 3, modelVersion: 1 } });
     devices[bleName] = d.id;
   }
   await prisma.device.update({ where: { id: devices['RR-D004'] }, data: { status: 'CLEANING' } });
