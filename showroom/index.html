@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rumbo Rehab</title>
+<meta name="description" content="Seguimiento verificado de rehabilitación de hombro en casa: un reloj que cuenta y verifica cada repetición con IA, una app para el paciente y un panel para el fisioterapeuta. Finalista de Jalisco MedTech 2026.">
+<meta name="theme-color" content="#3F3A9E">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:url" content="https://rumbo-rehab-web.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_MX">
+<meta property="og:title" content="Rumbo Rehab">
+<meta property="og:description" content="Seguimiento verificado de rehabilitación de hombro en casa. Finalista de Jalisco MedTech 2026.">
+<meta property="og:image" content="https://rumbo-rehab-web.vercel.app/img/caja-abierta.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: clínico y cercano, como el propio producto; poco adorno, datos reales.
+IDEA: el sendero de la marca: cada sección es un paso hacia la persona con los brazos arriba.
+PICTURE: el sendero del proyecto dibujado en el hero, que termina en la figura (finalista), y el kit piloto real.
+COLOUR and TYPE: Índigo #3F3A9E en bandas planas, Girasol #F2B33D solo para la meta, Crema de fondo; Nunito.
+LAYOUT: bandas a todo lo ancho que alternan Índigo y Crema, contenido a 1180px, apilado bajo 760px.
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#FAF8F4,#14122A);--card:light-dark(#FFFFFF,#1D1A3A);--ink:light-dark(#1E1B3A,#EEECF8);
+--slate:light-dark(#55516E,#B9B5D0);--line:light-dark(#E8E5F0,#2E2A52);--soft:light-dark(#E2E0F4,#272350);
+--indigo:#3F3A9E;--night:#2A2766;--sun:#F2B33D;--sun-ink:light-dark(#B87C0C,#F2B33D);--lav:#D9D6F2;--title:light-dark(#3F3A9E,#C9C5FF)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Nunito,system-ui,sans-serif;overflow-x:clip}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto}
+.band{padding:clamp(48px,7vw,104px) max(5vw,18px)}
+.ind{background:var(--indigo);color:#fff}
+.ind .muted{color:var(--lav)}
+.muted{color:var(--slate)}
+h1,h2,h3{margin:0;line-height:1.08;text-wrap:balance;font-weight:900;letter-spacing:-.01em}
+h1{font-size:clamp(36px,5.2vw,58px)}
+h2{font-size:clamp(30px,3.8vw,46px);color:var(--title)}
+.ind h2{color:#fff}
+h3{font-size:21px;font-weight:800}
+p{margin:0}
+.kicker{font-weight:800;font-size:15px;color:var(--sun-ink);margin-bottom:10px}
+.ind .kicker{color:var(--sun)}
+.lead{font-size:clamp(18px,1.6vw,20px);max-width:62ch}
+
+/* barra superior */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:24px;padding:12px max(5vw,18px);flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none}
+.logo b{display:block;font:900 27px/.9 Nunito;letter-spacing:-.02em;color:var(--title)}
+.logo small{display:block;font:800 8px/1 Nunito;letter-spacing:.42em;color:var(--slate);margin-top:4px}
+nav{display:flex;gap:4px 18px;flex-wrap:wrap;margin-left:auto;font-weight:700;font-size:15px}
+nav a{text-decoration:none;color:var(--slate);padding:6px 0}
+nav a:hover,nav a:focus-visible{color:var(--title)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--sun);outline-offset:3px;border-radius:6px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center}
+.hero .by{font-weight:700;color:var(--lav);margin-bottom:18px;font-size:16px}
+.hero .lead{margin-top:22px;color:#E9E7FA}
+.prize{display:flex;gap:16px;align-items:center;margin-top:34px;padding:16px 20px;border-radius:20px;background:var(--night);max-width:520px}
+.prize .medal{flex:none;width:58px;height:58px;border-radius:50%;background:var(--sun);display:grid;place-items:center}
+.prize strong{display:block;font-size:19px;font-weight:900;color:#fff}
+.prize span{font-size:15px;color:var(--lav)}
+.path{width:100%;height:auto;overflow:visible}
+.path text{font:700 13px Nunito;fill:var(--lav)}
+.path .goal{font:900 15px Nunito;fill:var(--sun)}
+.path .dot{fill:#fff;opacity:0;animation:in .5s ease-out forwards}
+.path .fig{opacity:0;animation:in .6s ease-out 1.5s forwards}
+.path .arc{stroke-dasharray:60;stroke-dashoffset:60;animation:arms .6s ease-out 1.6s forwards}
+@keyframes in{to{opacity:1}}@keyframes arms{to{stroke-dashoffset:0}}
+
+.shot{margin-top:clamp(-120px,-8vw,-40px)}
+.shot img{border-radius:28px;width:100%;border:1px solid var(--line)}
+.cap{font-size:15px;color:var(--slate);margin-top:12px}
+
+/* problema */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:44px;border-top:3px dotted #9A96AE}
+.stat{padding:26px 26px 0 0}
+.stat b{display:block;font-size:clamp(44px,5.4vw,68px);font-weight:900;color:var(--title);line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat p{margin-top:12px;font-size:16px;color:var(--slate);max-width:30ch}
+.quote{margin-top:44px;font-size:clamp(20px,2vw,24px);font-weight:800;max-width:40ch}
+
+/* video */
+.vid{margin-top:36px;aspect-ratio:16/9;border-radius:28px;overflow:hidden;background:var(--night);position:relative}
+.vid video{width:100%;height:100%;display:block;background:#000}
+.steps3{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.steps3 span{background:var(--night);padding:8px 16px;border-radius:999px;font-weight:800;font-size:15px}
+
+/* cómo funciona */
+.trail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin-top:48px;position:relative}
+.trail::before{content:"";position:absolute;left:28px;right:12%;top:27px;border-top:3px dotted #9A96AE}
+.trail li{list-style:none;position:relative}
+.trail .n{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--indigo);color:#fff;font-weight:900;font-size:22px;position:relative}
+.trail li:last-child .n{background:var(--sun);color:#1E1B3A}
+.trail h3{margin:20px 0 8px;color:var(--title)}
+.trail p{color:var(--slate);font-size:16px}
+ol.trail{padding:0}
+
+/* producto */
+.parts{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;margin-top:44px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:clamp(20px,2.4vw,30px)}
+.card h3{color:var(--title)}
+.card p{margin-top:8px;color:var(--slate);font-size:16px}
+.watch img{border-radius:14px;background:#fff;margin:18px 0 6px}
+.specs{width:100%;border-collapse:collapse;font-size:15px;margin-top:14px}
+.specs td{padding:7px 0;border-top:1px solid var(--line);vertical-align:top}
+.specs td:first-child{color:var(--slate);width:34%;padding-right:12px}
+.side{display:grid;gap:28px;align-content:start}
+.result{background:var(--soft);border-radius:20px;padding:22px 26px}
+.result b{font-size:34px;font-weight:900;color:var(--title);font-variant-numeric:tabular-nums}
+.result p{font-size:15px;color:var(--slate);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chips span{background:var(--line);color:var(--slate);font-weight:700;font-size:14px;padding:5px 12px;border-radius:999px;white-space:nowrap}
+
+/* kit */
+.kit{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;margin-top:40px}
+.kit button{all:unset;cursor:zoom-in;display:block;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
+.kit button{aspect-ratio:1.41}.kit .a button{aspect-ratio:auto;height:100%}
+.kit button img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease-out}
+.kit button:hover img{transform:scale(1.03)}
+.kit .a{grid-column:span 4;grid-row:span 2}
+.kit .b,.kit .c{grid-column:span 2}
+.kit .d,.kit .e,.kit .f{grid-column:span 2}
+.kit figcaption{font-size:14px;color:var(--slate);margin-top:6px}
+dialog{border:0;padding:0;background:transparent;max-width:min(1200px,94vw)}
+dialog::backdrop{background:rgba(20,18,42,.86)}
+dialog img{max-height:86vh;width:auto;margin:auto;border-radius:12px}
+dialog button{position:fixed;top:14px;right:18px;width:44px;height:44px;border-radius:50%;border:0;background:#fff;color:#1E1B3A;font:900 22px Nunito;cursor:pointer}
+
+/* regulatorio + negocio */
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;margin-top:40px}
+.use{border-left:4px solid var(--sun);padding:6px 0 6px 18px;margin:16px 0 22px;font-weight:700}
+.route{counter-reset:r;padding:0;margin:0}
+.route li{list-style:none;counter-increment:r;display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.route li::before{content:counter(r);width:30px;height:30px;border-radius:50%;background:var(--soft);color:var(--title);display:grid;place-items:center;font-weight:900;font-size:15px}
+.route b{display:block}
+.route span{font-size:15px;color:var(--slate)}
+.price{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.price div{flex:1 1 120px;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.price b{display:block;font-size:24px;font-weight:900;color:var(--title);white-space:nowrap}
+.price span{font-size:14px;color:var(--slate)}
+
+/* demo day */
+.dd{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;margin-top:40px}
+.dd img{border-radius:20px;width:100%;height:100%;object-fit:cover}
+.dd .stack2{display:grid;gap:20px}
+.then{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;margin-top:20px}
+.then .card{background:var(--night);border-color:transparent;color:#fff}
+.then h3{color:var(--sun);font-size:16px}
+.then ul{margin:10px 0 0;padding-left:18px;font-size:16px}
+.then li{margin:4px 0}
+.then .before li{color:var(--lav)}
+
+/* quién */
+.who{display:grid;grid-template-columns:200px minmax(0,1fr);gap:clamp(24px,4vw,48px);align-items:start;margin-top:36px}
+.who img{border-radius:20px;aspect-ratio:3/4;object-fit:cover;object-position:50% 70%}
+.who ul{margin:14px 0 0;padding-left:18px;color:var(--slate)}
+.who li{margin:5px 0}
+.support{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.support span{background:var(--soft);color:var(--title);font-weight:800;font-size:14px;padding:7px 14px;border-radius:999px}
+.mail{display:inline-block;margin-top:26px;background:var(--sun);color:#1E1B3A;font-weight:900;padding:12px 24px;border-radius:999px;text-decoration:none}
+footer{padding:28px max(5vw,18px);font-size:14px;color:var(--slate);border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media(max-width:900px){
+ .hero,.parts,.two,.dd,.then{grid-template-columns:minmax(0,1fr)}
+ .trail{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .trail::before{display:none}
+ .kit{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .kit .a{grid-column:span 2;grid-row:auto}.kit .a button{aspect-ratio:1.5}.kit .b,.kit .c,.kit .d,.kit .e,.kit .f{grid-column:span 1}
+}
+@media(max-width:600px){
+ nav{margin-left:0;width:100%}
+ .stats{grid-template-columns:minmax(0,1fr)}
+ .trail{grid-template-columns:minmax(0,1fr)}
+ .who{grid-template-columns:minmax(0,1fr)}.who img{max-width:220px}
+ .path text{font-size:20px}.path .goal{font-size:22px}
+ .shot{margin-top:24px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.path .dot,.path .fig{opacity:1}.path .arc{stroke-dashoffset:0}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="top">
+ <div class="wrap">
+  <a class="logo" href="#inicio" aria-label="Rumbo Rehab, inicio">
+   <svg width="40" height="40" viewBox="0 0 48 48" aria-hidden="true"><g fill="#3F3A9E"><circle cx="8" cy="42" r="2.5"/><circle cx="12.3" cy="35.2" r="2.5"/><circle cx="20.3" cy="32.3" r="2.5"/><circle cx="27.3" cy="27.8" r="2.5"/></g><path d="M27.5 10 Q36 28 44.5 10" fill="none" stroke="#F2B33D" stroke-width="4.5" stroke-linecap="round"/><circle cx="36" cy="9" r="4.5" fill="#F2B33D"/></svg>
+   <span><b>rumbo</b><small>REHAB</small></span>
+  </a>
+  <nav aria-label="Secciones">
+   <a href="#problema">Problema</a><a href="#demo">Demo</a><a href="#producto">Producto</a><a href="#kit">Kit piloto</a><a href="#demoday">Demo Day</a><a href="#quien">Contacto</a>
+  </nav>
+ </div>
+</header>
+
+<section class="band ind" id="inicio">
+ <div class="wrap hero">
+  <div>
+   <p class="by">Proyecto de Moisés García · Ingeniería Biomédica, UdeG</p>
+   <h1>Seguimiento verificado de rehabilitación de hombro en casa</h1>
+   <p class="lead">Un reloj que cuenta cada repetición y verifica con un modelo de IA, dentro del propio reloj, que sea el ejercicio indicado. Una app guía al paciente y un panel le muestra al fisioterapeuta, antes de la siguiente cita, quién hizo su rutina, quién se atrasa y a quién le duele.</p>
+   <div class="prize">
+    <div class="medal" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 48 48"><path d="M13 22 Q24 44 35 22" fill="none" stroke="#1E1B3A" stroke-width="5" stroke-linecap="round"/><circle cx="24" cy="15" r="6" fill="#1E1B3A"/></svg></div>
+    <div><strong>Finalista de Jalisco MedTech 2026</strong><span>Uno de los 6 proyectos finalistas del programa · Demo Day, 30 de octubre de 2026</span></div>
+   </div>
+  </div>
+  <svg class="path" viewBox="0 0 520 420" role="img" aria-label="El recorrido del proyecto: de una idea por validar a finalista de Jalisco MedTech">
+   <circle class="dot" cx="40" cy="388" r="11" style="animation-delay:.1s"/>
+   <circle class="dot" cx="118" cy="300" r="11" style="animation-delay:.4s"/>
+   <circle class="dot" cx="230" cy="262" r="11" style="animation-delay:.7s"/>
+   <circle class="dot" cx="330" cy="200" r="11" style="animation-delay:1s"/>
+   <g fill="#9A96AE"><circle cx="79" cy="344" r="4"/><circle cx="174" cy="281" r="4"/><circle cx="280" cy="231" r="4"/><circle cx="362" cy="172" r="4"/><circle cx="392" cy="150" r="4"/></g>
+   <text x="62" y="394">Una idea por validar</text>
+   <text x="140" y="306">Reloj que cuenta con IA</text>
+   <text x="252" y="268">App, panel y servidor</text>
+   <text x="352" y="206">Kit piloto</text>
+   <g class="fig">
+    <circle cx="420" cy="62" r="30" fill="#F2B33D"/>
+    <text class="goal" x="322" y="66" text-anchor="end">Finalista</text>
+    <text x="322" y="86" text-anchor="end">Jalisco MedTech 2026</text>
+   </g>
+   <path class="arc" d="M352 70 Q420 210 488 70" fill="none" stroke="#F2B33D" stroke-width="32" stroke-linecap="round" pathLength="60"/>
+  </svg>
+ </div>
+</section>
+
+<section class="band" style="padding-top:0">
+ <figure class="wrap shot" style="margin-bottom:0">
+  <img src="img/caja-abierta.jpg" width="1600" height="1067" alt="Caja del kit piloto Rumbo Rehab abierta, con el reloj RR-1, la guía rápida y la tarjeta de vinculación">
+  <figcaption class="cap">Kit piloto del nodo de muñeca RR-1: reloj, guía rápida, etiquetas y tarjeta de vinculación para el fisioterapeuta.</figcaption>
+ </figure>
+</section>
+
+<section class="band" id="problema" style="padding-top:0">
+ <div class="wrap">
+  <p class="kicker">El problema</p>
+  <h2>La rehabilitación se gana en casa, y nadie la ve</h2>
+  <div class="stats">
+   <div class="stat"><b>30–50 %</b><p>de los pacientes hace sus ejercicios en casa, y es un dato autorreportado.</p></div>
+   <div class="stat"><b>1 de 2</b><p>pacientes deja la terapia antes del alta (rango de 1 de 5 a 1 de 2, datos de EE. UU.).</p></div>
+   <div class="stat"><b>13,400</b><p>fisioterapeutas para todo México: 1 por cada 10,000 habitantes.</p></div>
+  </div>
+  <p class="quote">El fisio se entera de que el paciente no hizo sus ejercicios hasta la siguiente cita.</p>
+ </div>
+</section>
+
+<section class="band ind" id="demo">
+ <div class="wrap">
+  <p class="kicker">Demostración</p>
+  <h2>Del reloj al panel del fisio en menos de un minuto</h2>
+  <div class="steps3"><span>1 · Reloj en la muñeca</span><span>2 · Sesión en la app</span><span>3 · Aparece en el panel</span></div>
+  <div class="vid"><video controls playsinline preload="none" poster="img/demo-poster.jpg" src="demo.mp4"></video></div>
+  <p class="muted" style="margin-top:12px;font-size:15px">También en <a href="https://www.youtube.com/watch?v=dJzLkPVqDGs" target="_blank" rel="noopener">YouTube</a>.</p>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap">
+  <p class="kicker">Cómo funciona</p>
+  <h2>Una semana con Rumbo</h2>
+  <ol class="trail">
+   <li><div class="n">1</div><h3>El fisio prescribe</h3><p>Elige ejercicios y meta semanal en el panel, y le entrega el reloj al paciente.</p></li>
+   <li><div class="n">2</div><h3>El paciente entrena</h3><p>En casa se pone el reloj y la app lo guía con voz y video.</p></li>
+   <li><div class="n">3</div><h3>El reloj cuenta</h3><p>Cada repetición queda verificada. El paciente reporta su dolor al terminar.</p></li>
+   <li><div class="n">4</div><h3>El fisio ve el avance</h3><p>Antes de la cita sabe quién va bien, quién se atrasa y a quién le duele.</p></li>
+  </ol>
+ </div>
+</section>
+
+<section class="band" id="producto" style="padding-top:0">
+ <div class="wrap">
+  <p class="kicker">El producto</p>
+  <h2>Tres piezas, construidas de punta a punta</h2>
+  <div class="parts">
+   <article class="card watch">
+    <h3>Reloj RR-1</h3>
+    <p>Lee el acelerómetro y el giroscopio a 50 Hz, ventanea la señal y corre un modelo TinyML que reconoce el ejercicio y cuenta repeticiones. Solo envía eventos por Bluetooth, no la señal cruda.</p>
+    <img src="img/carcasa-v22.jpg" width="1400" height="940" alt="Render de la carcasa v2.2 del reloj, negra con tapa índigo y grabado rumbo RR-1">
+    <table class="specs">
+     <tr><td>Electrónica</td><td>Seeed XIAO nRF52840 Sense, IMU LSM6DS3TR-C de 6 ejes</td></tr>
+     <tr><td>Conexión</td><td>Bluetooth LE 2.4 GHz</td></tr>
+     <tr><td>Carcasa</td><td>v2.2, PLA impreso en 3D, 3 piezas, 40.7 × 30.8 × 20.1 mm, ≈ 20 g</td></tr>
+     <tr><td>Batería</td><td>Li-Po 3.7 V, 250 mAh, carga por USB-C</td></tr>
+     <tr><td>Correa</td><td>Nylon con velcro, muñeca de 135 a 202 mm</td></tr>
+    </table>
+    <div class="chips"><span>TensorFlow Lite Micro</span><span>Python</span><span>Arduino / mbed</span></div>
+   </article>
+   <div class="side">
+    <div class="result"><b>10/10</b><p>aciertos y 0/10 falsos en la primera prueba del modelo dentro del reloj (n = 1). El siguiente paso es entrenar con más sujetos.</p></div>
+    <article class="card"><h3>App del paciente</h3><p>Guía la sesión con voz y video, muestra el conteo en vivo y registra el dolor al final. Habla de usted y con letra grande, pensada para pacientes de 40 a 70 años.</p><div class="chips"><span>Flutter</span><span>BLE</span></div></article>
+    <article class="card"><h3>Panel del fisioterapeuta</h3><p>Muestra quién va bien, quién se atrasa y a quién le duele, con la diferencia entre lo que verificó el reloj y lo que reportó el paciente.</p><div class="chips"><span>Next.js</span><span>NestJS</span><span>TypeScript</span></div></article>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="band ind" id="kit">
+ <div class="wrap">
+  <p class="kicker">Kit piloto</p>
+  <h2>Listo para entregarse en consultorio</h2>
+  <p class="lead muted" style="margin-top:14px">Caja, guía rápida a doble cara, etiquetas de serie y tarjeta de vinculación con QR. El etiquetado sigue símbolos ISO 15223-1 y se marca como prototipo de investigación.</p>
+  <div class="kit" id="gal">
+   <figure class="a" style="margin:0"><button data-full="img/caja-cerrada.jpg"><img src="img/caja-cerrada.jpg" width="1600" height="1067" alt="Caja cerrada del kit con guía rápida y tarjeta de vinculación"></button></figure>
+   <figure class="b" style="margin:0"><button data-full="img/guia-1.jpg"><img src="img/guia-1.jpg" width="1287" height="911" alt="Guía rápida, cara exterior: conozca su reloj, carga, colocación y vinculación"></button></figure>
+   <figure class="c" style="margin:0"><button data-full="img/guia-2.jpg"><img src="img/guia-2.jpg" width="1287" height="911" alt="Guía rápida, cara interior: cuidados, advertencias, especificaciones y símbolos"></button></figure>
+   <figure class="d" style="margin:0"><button data-full="img/tarjeta-1.jpg"><img src="img/tarjeta-1.jpg" width="900" height="583" alt="Tarjeta de vinculación, frente"></button></figure>
+   <figure class="e" style="margin:0"><button data-full="img/tarjeta-2.jpg"><img src="img/tarjeta-2.jpg" width="900" height="583" alt="Tarjeta de vinculación, reverso con código QR y número de serie RR-0001"></button></figure>
+   <figure class="f" style="margin:0"><button data-full="img/etiquetas.jpg"><img src="img/etiquetas.jpg" width="745" height="1053" alt="Hoja de etiquetas adhesivas para dispositivo y caja" style="object-position:top"></button></figure>
+  </div>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap">
+  <div class="two">
+   <div>
+    <p class="kicker">Ruta regulatoria</p>
+    <h2>Un uso previsto acotado</h2>
+    <p class="use">Medir de forma objetiva si el paciente hizo el ejercicio que le prescribieron. No diagnostica ni trata.</p>
+    <ol class="route">
+     <li><div><b>Sesión con COFEPRIS</b><span>Hipótesis: Clase I o bajo riesgo (conservadora: Clase II).</span></div></li>
+     <li><div><b>Homologación IFT y eléctrica</b><span>Por usar Bluetooth.</span></div></li>
+     <li><div><b>Comité de ética</b><span>Para el piloto clínico con pacientes.</span></div></li>
+     <li><div><b>Registro sanitario</b><span>Con gestión de riesgos ISO 14971, NOM-241 e ISO 13485. Datos de salud protegidos conforme a la LFPDPPP.</span></div></li>
+    </ol>
+   </div>
+   <div>
+    <p class="kicker">Modelo de negocio</p>
+    <h2>La clínica paga, el paciente llega a su meta</h2>
+    <p class="muted" style="margin-top:16px">Suscripción mensual para clínicas privadas de fisioterapia. Los relojes van en comodato y rotan entre pacientes.</p>
+    <div class="price">
+     <div><b>$899</b><span>5 pacientes activos</span></div>
+     <div><b>$1,799</b><span>15 pacientes activos</span></div>
+     <div><b>$2,999</b><span>30 pacientes activos</span></div>
+    </div>
+    <p class="muted" style="font-size:15px">MXN al mes, más cuota de alta. Primer cliente: clínicas de Guadalajara y Zapopan con 2 o más fisios; después, cirujanos de hombro y otras articulaciones. El modelo se iteró 4 veces durante el programa.</p>
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="band ind" id="demoday">
+ <div class="wrap">
+  <p class="kicker">Jalisco MedTech 2026</p>
+  <h2>Finalistas en el Demo Day</h2>
+  <p class="lead muted" style="margin-top:14px">Rumbo entró al programa como una idea por validar y salió como uno de los 6 proyectos finalistas, con prototipo funcional y piloto propuesto a clínicas.</p>
+  <div class="dd">
+   <img src="img/demoday-equipo.jpg" width="1600" height="1200" alt="Moisés García presentando la diapositiva de equipo de Rumbo Rehab en el Demo Day de Jalisco MedTech">
+   <div class="stack2">
+    <img src="img/demoday-piloto.jpg" width="1280" height="960" alt="Moisés García presentando la diapositiva Súmense al piloto ante el público">
+   </div>
+  </div>
+  <div class="then">
+   <div class="card before"><h3>Al entrar al programa</h3><ul><li>Una idea por validar</li><li>Sin cliente definido</li><li>Sin modelo de negocio</li><li>Sin prototipo</li></ul></div>
+   <div class="card"><h3>Al Demo Day</h3><ul><li>Reloj que cuenta y verifica con IA</li><li>App, panel y servidor de punta a punta</li><li>Kit piloto: caja, guía, etiquetas y tarjeta</li><li>Respuesta muy positiva de 3 consultorios</li><li>Modelo de negocio iterado 4 veces y ruta regulatoria fundamentada</li></ul></div>
+  </div>
+ </div>
+</section>
+
+<section class="band" id="quien">
+ <div class="wrap">
+  <p class="kicker">Quién lo construye</p>
+  <h2>Moisés García</h2>
+  <div class="who">
+   <img src="img/moises.jpg" width="477" height="636" alt="Moisés García">
+   <div>
+    <p class="lead">Fundador de Rumbo Rehab. Estudiante de Ingeniería Biomédica en CUTLAJO (UdeG) y asistente de investigación en el laboratorio BIL de CUCEI y en Biohacking de CUTLAJO.</p>
+    <ul>
+     <li>Firmware del reloj, captura de datos y modelo TinyML</li>
+     <li>Diseño de la carcasa y la correa para impresión 3D</li>
+     <li>App del paciente en Flutter, panel en Next.js y servidor en NestJS</li>
+     <li>Marca, kit piloto y documentación regulatoria preliminar</li>
+    </ul>
+    <div class="support"><span>Fisios de 3 consultorios</span><span>Laboratorio BIL, CUCEI</span><span>Biohacking, CUTLAJO</span><span>Profesores de la UdeG</span></div>
+    <a class="mail" href="mailto:pokemoy999@gmail.com">pokemoy999@gmail.com</a>
+   </div>
+  </div>
+ </div>
+</section>
+
+<footer><div class="wrap"><span>Rumbo Rehab · Tlajomulco de Zúñiga, Jalisco</span><span>Prototipo de investigación, sin registro sanitario</span></div></footer>
+
+<dialog id="lb"><button type="button" aria-label="Cerrar">×</button><img alt=""></dialog>
+
+<script>
+{
+const lb = document.getElementById('lb'), big = lb.querySelector('img');
+document.getElementById('gal').addEventListener('click', e => {
+ const b = e.target.closest('button[data-full]');
+ if (!b) return;
+ big.src = b.dataset.full; big.alt = b.querySelector('img').alt;
+ lb.showModal();
+});
+lb.addEventListener('click', e => { if (e.target !== big) lb.close(); });
+}
+</script>
+</body>
+</html>
